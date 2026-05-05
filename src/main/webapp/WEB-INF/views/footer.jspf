@@ -1,0 +1,46 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+</main>
+
+<footer class="mt-20 bg-ink-900 text-slate-300">
+  <div class="max-w-7xl mx-auto px-6 py-12 grid md:grid-cols-4 gap-8">
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+          <i class="bi bi-car-front-fill"></i>
+        </span>
+        <span class="text-xl font-extrabold text-white">Drive<span class="text-brand-500">Lanka</span></span>
+      </div>
+      <p class="text-sm text-slate-400">Sri Lanka's modern vehicle rental platform. Cars, bikes & vans, on demand.</p>
+    </div>
+    <div>
+      <h4 class="text-white font-semibold mb-3">Explore</h4>
+      <ul class="space-y-2 text-sm">
+        <li><a class="hover:text-brand-500" href="${pageContext.request.contextPath}/vehicles?action=browse&type=Car">Cars</a></li>
+        <li><a class="hover:text-brand-500" href="${pageContext.request.contextPath}/vehicles?action=browse&type=Bike">Bikes</a></li>
+        <li><a class="hover:text-brand-500" href="${pageContext.request.contextPath}/vehicles?action=browse&type=Van">Vans</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-white font-semibold mb-3">Admin</h4>
+      <ul class="space-y-2 text-sm">
+        <li><a class="hover:text-brand-500" href="${pageContext.request.contextPath}/vehicles?action=dashboard">Dashboard</a></li>
+        <li><a class="hover:text-brand-500" href="${pageContext.request.contextPath}/vehicles?action=list">Manage Fleet</a></li>
+        <li><a class="hover:text-brand-500" href="${pageContext.request.contextPath}/vehicles?action=add">Add Vehicle</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="text-white font-semibold mb-3">Project</h4>
+      <ul class="space-y-1 text-sm text-slate-400">
+        <li>SE1020 — OOP</li>
+        <li>Component: Vehicle Management</li>
+        <li>Sankalpa T.W.K.S.D · IT22564290</li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+    &copy; 2026 DriveLanka — Educational Project. All rights reserved.
+  </div>
+</footer>
+
+</body>
+</html>
