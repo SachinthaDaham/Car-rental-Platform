@@ -4,7 +4,8 @@
     request.setAttribute("nav", "dashboard");
     request.setAttribute("pageTitle", "Admin Dashboard — DriveLanka");
     Map<String,Object> stats = (Map<String,Object>) request.getAttribute("stats");
-    List<Vehicle> recent = (List<Vehicle>) request.getAttribute("recent");
+    List<Vehicle> recent     = (List<Vehicle>) request.getAttribute("recent");
+    List<Vehicle> topEarners = (List<Vehicle>) request.getAttribute("topEarners");
     int total  = (Integer) stats.get("total");
     long avail = (Long) stats.get("available");
     long rented= (Long) stats.get("rented");
@@ -172,13 +173,71 @@
             <i class="bi bi-table"></i>
           </div>
           <div>
-            <p class="font-semibold text-sm text-ink-900">Manage All</p>
+            <p class="font-semibold text-sm text-ink-900">Manage Fleet</p>
             <p class="text-xs text-slate-400"><%= total %> total vehicles</p>
+          </div>
+        </a>
+        <a href="${pageContext.request.contextPath}/auth?action=users" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50 transition group">
+          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition">
+            <i class="bi bi-people"></i>
+          </div>
+          <div>
+            <p class="font-semibold text-sm text-ink-900">Manage Users</p>
+            <p class="text-xs text-slate-400">View registered accounts</p>
           </div>
         </a>
       </div>
     </div>
   </div>
+
+  <!-- REVENUE STRIP -->
+  <div class="grid sm:grid-cols-3 gap-4">
+    <div class="bg-gradient-to-br from-brand-600 to-brand-800 rounded-2xl p-5 text-white shadow-card">
+      <p class="text-brand-200 text-xs font-bold uppercase tracking-wider mb-1">Daily Revenue Potential</p>
+      <p class="text-3xl font-extrabold">LKR <%= String.format("%,.0f", fleetVal) %></p>
+      <p class="text-brand-100 text-xs mt-1">If all <%= total %> vehicles rented today</p>
+    </div>
+    <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-5 text-white shadow-card">
+      <p class="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-1">Current Active Revenue</p>
+      <p class="text-3xl font-extrabold">LKR <%= String.format("%,.0f", fleetVal * rented / Math.max(total,1)) %></p>
+      <p class="text-emerald-100 text-xs mt-1">From <%= rented %> rented vehicle<%= rented!=1?"s":"" %></p>
+    </div>
+    <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-white shadow-card">
+      <p class="text-amber-100 text-xs font-bold uppercase tracking-wider mb-1">Avg Daily Rate</p>
+      <p class="text-3xl font-extrabold">LKR <%= String.format("%,.0f", avgRate) %></p>
+      <p class="text-amber-100 text-xs mt-1">Across all fleet vehicles</p>
+    </div>
+  </div>
+
+  <!-- TOP EARNERS + RECENT IN TWO COLUMNS -->
+  <div class="grid lg:grid-cols-2 gap-6">
+
+    <!-- Top Earners -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h3 class="font-bold text-base text-ink-900 flex items-center gap-2">
+          <i class="bi bi-trophy-fill text-amber-500"></i> Top Earners
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5">Highest daily rate vehicles</p>
+      </div>
+      <div class="divide-y divide-slate-50">
+        <% if (topEarners != null) { int rank = 1; for (Vehicle te : topEarners) { %>
+          <div class="flex items-center gap-4 px-6 py-3 hover:bg-slate-50/60 transition">
+            <span class="text-base font-extrabold text-slate-200 w-5 shrink-0">#<%= rank++ %></span>
+            <img src="<%= te.getImageUrl() %>" onerror="this.src='https://placehold.co/80x80/e0f2fe/0369a1'"
+                 class="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0">
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm text-ink-900 truncate"><%= te.getName() %></p>
+              <p class="text-[10px] font-mono text-slate-400"><%= te.getId() %> · <span class="inline-flex items-center gap-0.5 bg-slate-100 px-1.5 py-0.5 rounded text-slate-600"><i class="bi <%= te.getIconClass() %>"></i> <%= te.getType() %></span></p>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-sm font-extrabold text-brand-700">LKR <%= String.format("%,.0f", te.getDailyRate()) %></p>
+              <p class="text-[10px] text-slate-400">/day</p>
+            </div>
+          </div>
+        <% } } %>
+      </div>
+    </div>
 
   <!-- RECENT VEHICLES TABLE -->
   <div class="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
@@ -231,6 +290,7 @@
       </table>
     </div>
   </div>
+  </div><!-- end two-column grid -->
 </div>
 
 <%@ include file="footer.jspf" %>

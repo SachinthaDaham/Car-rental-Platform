@@ -68,7 +68,8 @@ public class VehicleDAO {
                     !(v.getBrand().toLowerCase().contains(k)
                             || v.getModel().toLowerCase().contains(k)
                             || v.getId().toLowerCase().contains(k)
-                            || (v.getLocation() != null && v.getLocation().toLowerCase().contains(k)))) continue;
+                            || (v.getLocation()    != null && v.getLocation().toLowerCase().contains(k))
+                            || (v.getDescription() != null && v.getDescription().toLowerCase().contains(k)))) continue;
             if (type != null && !type.isEmpty() && !v.getType().equalsIgnoreCase(type)) continue;
             if (minRate != null && v.getDailyRate() < minRate) continue;
             if (maxRate != null && v.getDailyRate() > maxRate) continue;
@@ -128,6 +129,13 @@ public class VehicleDAO {
         m.put("avgRate", avgRate);
         m.put("fleetValuePerDay", fleetValuePerDay);
         return m;
+    }
+
+    /** Returns the top N vehicles sorted by daily rate descending. */
+    public List<Vehicle> getTopByRate(int n) throws IOException {
+        List<Vehicle> all = getAllVehicles();
+        all.sort((a, b) -> Double.compare(b.getDailyRate(), a.getDailyRate()));
+        return all.subList(0, Math.min(n, all.size()));
     }
 
     private void writeAll(List<Vehicle> list) throws IOException {

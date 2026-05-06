@@ -81,6 +81,7 @@ public class VehicleServlet extends HttpServlet {
                     req.setAttribute("stats", stats);
                     List<Vehicle> all = dao.getAllVehicles();
                     req.setAttribute("recent", all.subList(Math.max(0, all.size() - 5), all.size()));
+                    req.setAttribute("topEarners", dao.getTopByRate(5));
                     req.getRequestDispatcher("/WEB-INF/views/dashboard.jsp").forward(req, resp);
                     return;
                 }
