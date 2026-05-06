@@ -120,6 +120,15 @@
           <option value="name-asc">Name: A–Z</option>
           <option value="avail">Available First</option>
         </select>
+        <!-- View toggle -->
+        <div class="hidden sm:flex border border-slate-200 rounded-lg overflow-hidden">
+          <button id="viewGrid" class="w-9 h-9 flex items-center justify-center bg-brand-600 text-white hover:bg-brand-700 transition" title="Grid View">
+            <i class="bi bi-grid-3x3-gap-fill text-sm"></i>
+          </button>
+          <button id="viewList" class="w-9 h-9 flex items-center justify-center bg-white text-slate-500 hover:bg-slate-50 transition" title="List View">
+            <i class="bi bi-list-ul text-sm"></i>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -168,6 +177,7 @@
                 <div class="text-right">
                   <span class="text-brand-700 font-extrabold">LKR <%= String.format("%,.0f", v.getDailyRate()) %></span>
                   <span class="text-slate-400 text-xs">/day</span>
+                  <div class="text-[10px] text-emerald-600 font-semibold">LKR <%= String.format("%,.0f", v.weeklyRate()) %>/wk</div>
                 </div>
               </div>
             </div>
@@ -226,6 +236,38 @@ if (sortSelect && grid) {
       }
     });
     cards.forEach(c => grid.appendChild(c));
+  });
+}
+
+// ── Grid / List view toggle
+const viewGrid = document.getElementById('viewGrid');
+const viewList = document.getElementById('viewList');
+if (viewGrid && viewList && grid) {
+  viewList.addEventListener('click', function() {
+    grid.className = 'flex flex-col gap-3';
+    grid.querySelectorAll('.vehicle-card').forEach(c => {
+      c.className = c.className.replace('hover:-translate-y-1', '');
+      c.classList.add('flex', 'flex-row', 'items-stretch');
+      const imgWrap = c.querySelector('.aspect-\\[16\\/10\\]');
+      if (imgWrap) { imgWrap.className = 'w-36 shrink-0 overflow-hidden bg-slate-100 relative'; }
+    });
+    viewList.classList.replace('text-slate-500', 'text-white');
+    viewList.classList.replace('bg-white', 'bg-brand-600');
+    viewGrid.classList.replace('bg-brand-600', 'bg-white');
+    viewGrid.classList.replace('text-white', 'text-slate-500');
+  });
+  viewGrid.addEventListener('click', function() {
+    grid.className = 'grid sm:grid-cols-2 xl:grid-cols-3 gap-5';
+    grid.querySelectorAll('.vehicle-card').forEach(c => {
+      c.classList.remove('flex', 'flex-row', 'items-stretch');
+      c.classList.add('hover:-translate-y-1');
+      const imgWrap = c.querySelector('div.w-36');
+      if (imgWrap) { imgWrap.className = 'aspect-[16/10] overflow-hidden bg-slate-100 relative'; }
+    });
+    viewGrid.classList.replace('bg-white', 'bg-brand-600');
+    viewGrid.classList.replace('text-slate-500', 'text-white');
+    viewList.classList.replace('bg-brand-600', 'bg-white');
+    viewList.classList.replace('text-white', 'text-slate-500');
   });
 }
 </script>

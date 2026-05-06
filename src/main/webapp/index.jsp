@@ -5,7 +5,10 @@
     request.setAttribute("pageTitle", "DriveLanka — Premium Vehicle Rental");
     VehicleDAO dao = new VehicleDAO(System.getProperty("user.home") + "/vrp_data/vehicles.txt");
     List<Vehicle> all = dao.getAllVehicles();
-    List<Vehicle> featured = all.subList(0, Math.min(6, all.size()));
+    // Show available vehicles first in featured section
+    List<Vehicle> sorted = new ArrayList<>(all);
+    sorted.sort((a, b) -> Boolean.compare(!a.isAvailable(), !b.isAvailable()));
+    List<Vehicle> featured = sorted.subList(0, Math.min(6, sorted.size()));
     Map<String,Object> stats = dao.getStats();
 %>
 <%@ include file="WEB-INF/views/header.jspf" %>
@@ -67,13 +70,14 @@
 
 <!-- STATS STRIP -->
 <section class="max-w-7xl mx-auto px-6 -mt-10 relative z-10">
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
     <%
       String[][] tiles = {
         {"bi-collection", "Total Fleet", String.valueOf(stats.get("total"))},
-        {"bi-check-circle", "Available Now", String.valueOf(stats.get("available"))},
-        {"bi-car-front", "Cars", String.valueOf(stats.get("cars"))},
-        {"bi-bicycle", "Bikes", String.valueOf(stats.get("bikes"))}
+        {"bi-check-circle-fill", "Available Now", String.valueOf(stats.get("available"))},
+        {"bi-car-front-fill", "Cars", String.valueOf(stats.get("cars"))},
+        {"bi-bicycle", "Bikes", String.valueOf(stats.get("bikes"))},
+        {"bi-truck", "Vans", String.valueOf(stats.get("vans"))}
       };
       for (String[] t : tiles) {
     %>
