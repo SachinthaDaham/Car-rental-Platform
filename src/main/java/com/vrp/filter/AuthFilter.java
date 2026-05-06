@@ -8,9 +8,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Set;
 
-@WebFilter("/vehicles")
+/**
+ * Servlet Filter that guards admin-only routes on both /vehicles and /auth.
+ * Demonstrates the FILTER pattern — cross-cutting security concern separated
+ * from business logic.
+ */
+@WebFilter(urlPatterns = {"/vehicles", "/auth"})
 public class AuthFilter implements Filter {
+
+    private static final Set<String> VEHICLE_ADMIN_ACTIONS = Set.of(
+        "dashboard", "list", "add", "edit", "delete", "toggle", "create", "update"
+    );
+    private static final Set<String> AUTH_ADMIN_ACTIONS = Set.of(
+        "users", "deleteUser"
+    );
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -18,31 +31,31 @@ public class AuthFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
-        String action = req.getParameter("action");
 
-        // List of protected actions that require ADMIN role
-        if (action != null && (action.equals("dashboard") || action.equals("list") || action.equals("add") || 
-            action.equals("edit") || action.equals("delete") || action.equals("toggle") || 
-            action.equals("create") || action.equals("update"))) {
-            
+        HttpServletRequest  req = (HttpServletRequest)  request;
+        HttpServletResponse res = (HttpServletResponse) response;
+
+        String action   = req.getParameter("action");
+        String servletPath = req.getServletPath();  // "/vehicles" or "/auth"
+
+        boolean requiresAdmin =
+            ("/vehicles".equals(servletPath) && action != null && VEHICLE_ADMIN_ACTIONS.contains(action)) ||
+            ("/auth".equals(servletPath)     && action != null && AUTH_ADMIN_ACTIONS.contains(action));
+
+        if (requiresAdmin) {
             HttpSession session = req.getSession(false);
-            if (session == null || session.getAttribute("loggedInUser") == null) {
-                // Not logged in -> redirect to login
+            User user = (session != null) ? (User) session.getAttribute("loggedInUser") : null;
+
+            if (user == null) {
                 res.sendRedirect(req.getContextPath() + "/auth?action=login");
                 return;
             }
-
-            User user = (User) session.getAttribute("loggedInUser");
             if (!user.isAdmin()) {
-                // Logged in but not admin -> forbid (or redirect to user dashboard)
                 res.sendRedirect(req.getContextPath() + "/auth?action=dashboard&error=unauthorized");
                 return;
             }
         }
-        
+
         chain.doFilter(request, response);
     }
 
