@@ -1,6 +1,8 @@
 package com.vrp.servlet;
 
+import com.vrp.dao.BookingDAO;
 import com.vrp.dao.UserDAO;
+import com.vrp.model.Booking;
 import com.vrp.model.User;
 
 import javax.servlet.ServletConfig;
@@ -8,18 +10,21 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 
 @WebServlet("/auth")
 public class AuthServlet extends HttpServlet {
-    private UserDAO userDAO;
+    private UserDAO    userDAO;
+    private BookingDAO bookingDAO;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String dataFile = System.getProperty("user.home") + "/vrp_data/users.txt";
-        userDAO = new UserDAO(dataFile);
+        String base = System.getProperty("user.home") + "/vrp_data/";
+        userDAO    = new UserDAO(base + "users.txt");
+        bookingDAO = new BookingDAO(base + "bookings.txt");
     }
 
     @Override
@@ -58,9 +63,25 @@ public class AuthServlet extends HttpServlet {
                 return;
             }
 
-            case "dashboard":
+            case "dashboard": {
+                HttpSession ds = req.getSession(false);
+                User du = (ds != null) ? (User) ds.getAttribute("loggedInUser") : null;
+                if (du != null) {
+                    try {
+                        List<Booking> myBookings = bookingDAO.getBookingsByUser(du.getUsername());
+                        long active    = myBookings.stream().filter(b -> b.isConfirmed() || b.isPending()).count();
+                        long completed = myBookings.stream().filter(Booking::isCompleted).count();
+                        double spent   = myBookings.stream().filter(b -> !b.isCancelled()).mapToDouble(Booking::getTotalCost).sum();
+                        req.setAttribute("myBookingCount", myBookings.size());
+                        req.setAttribute("myActiveCount",  active);
+                        req.setAttribute("myCompletedCount", completed);
+                        req.setAttribute("myTotalSpent", spent);
+                        req.setAttribute("myRecentBookings", myBookings.subList(0, Math.min(3, myBookings.size())));
+                    } catch (IOException ignored) {}
+                }
                 req.getRequestDispatcher("/WEB-INF/views/userDashboard.jsp").forward(req, resp);
                 return;
+            }
 
             default:
                 req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);

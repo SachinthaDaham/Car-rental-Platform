@@ -136,10 +136,10 @@
         <div class="mt-auto bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <% if (v.isAvailable()) { %>
             <% if (sessionUser != null) { %>
-              <button onclick="window.showToast('Booking coming soon! Contact us to reserve.','info')"
-                      class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base py-3.5 rounded-xl shadow-btn transition flex items-center justify-center gap-2">
+              <a href="${pageContext.request.contextPath}/booking?action=form&id=<%= v.getId() %>"
+                 class="w-full block text-center bg-brand-600 hover:bg-brand-700 text-white font-bold text-base py-3.5 rounded-xl shadow-btn transition flex items-center justify-center gap-2">
                 <i class="bi bi-calendar-check-fill"></i> Book This <%= v.getType() %>
-              </button>
+              </a>
             <% } else { %>
               <a href="${pageContext.request.contextPath}/auth?action=login"
                  class="w-full block text-center bg-brand-600 hover:bg-brand-700 text-white font-bold text-base py-3.5 rounded-xl shadow-btn transition">

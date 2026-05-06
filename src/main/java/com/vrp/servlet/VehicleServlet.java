@@ -1,5 +1,6 @@
 package com.vrp.servlet;
 
+import com.vrp.dao.BookingDAO;
 import com.vrp.dao.VehicleDAO;
 import com.vrp.model.*;
 
@@ -23,12 +24,14 @@ import java.util.Map;
 public class VehicleServlet extends HttpServlet {
 
     private VehicleDAO dao;
+    private BookingDAO bookingDAO;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String dataFile = System.getProperty("user.home") + "/vrp_data/vehicles.txt";
-        dao = new VehicleDAO(dataFile);
+        String base = System.getProperty("user.home") + "/vrp_data/";
+        dao        = new VehicleDAO(base + "vehicles.txt");
+        bookingDAO = new BookingDAO(base + "bookings.txt");
     }
 
     // ── GET ─────────────────────────────────────────────────────────────────
@@ -79,6 +82,7 @@ public class VehicleServlet extends HttpServlet {
                 case "dashboard": {
                     Map<String, Object> stats = dao.getStats();
                     req.setAttribute("stats", stats);
+                    req.setAttribute("bookingStats", bookingDAO.getStats());
                     List<Vehicle> all = dao.getAllVehicles();
                     req.setAttribute("recent", all.subList(Math.max(0, all.size() - 5), all.size()));
                     req.setAttribute("topEarners", dao.getTopByRate(5));

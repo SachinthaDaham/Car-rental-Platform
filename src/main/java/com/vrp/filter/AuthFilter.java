@@ -11,41 +11,63 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * Servlet Filter that guards admin-only routes on both /vehicles and /auth.
- * Demonstrates the FILTER pattern — cross-cutting security concern separated
- * from business logic.
+ * Servlet Filter guarding admin-only and login-required routes across all servlets.
+ *
+ * Demonstrates the FILTER design pattern — security is a cross-cutting concern
+ * kept separate from business logic, applied declaratively via annotation.
  */
-@WebFilter(urlPatterns = {"/vehicles", "/auth"})
+@WebFilter(urlPatterns = {"/vehicles", "/auth", "/booking"})
 public class AuthFilter implements Filter {
 
-    private static final Set<String> VEHICLE_ADMIN_ACTIONS = Set.of(
+    // Admin-only actions per servlet path
+    private static final Set<String> VEHICLE_ADMIN = Set.of(
         "dashboard", "list", "add", "edit", "delete", "toggle", "create", "update"
     );
-    private static final Set<String> AUTH_ADMIN_ACTIONS = Set.of(
+    private static final Set<String> AUTH_ADMIN = Set.of(
         "users", "deleteUser"
     );
+    private static final Set<String> BOOKING_ADMIN = Set.of(
+        "adminList", "updateStatus", "delete"
+    );
+    // Booking actions that require any logged-in user
+    private static final Set<String> BOOKING_LOGIN = Set.of(
+        "form", "create", "my", "confirm", "cancel"
+    );
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
+    @Override public void init(FilterConfig fc) throws ServletException {}
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        HttpServletRequest  req = (HttpServletRequest)  request;
-        HttpServletResponse res = (HttpServletResponse) response;
+        HttpServletRequest  req  = (HttpServletRequest)  request;
+        HttpServletResponse res  = (HttpServletResponse) response;
+        String path   = req.getServletPath();
+        String action = req.getParameter("action");
+        if (action == null) action = "";
 
-        String action   = req.getParameter("action");
-        String servletPath = req.getServletPath();  // "/vehicles" or "/auth"
+        HttpSession session = req.getSession(false);
+        User user = (session != null) ? (User) session.getAttribute("loggedInUser") : null;
 
-        boolean requiresAdmin =
-            ("/vehicles".equals(servletPath) && action != null && VEHICLE_ADMIN_ACTIONS.contains(action)) ||
-            ("/auth".equals(servletPath)     && action != null && AUTH_ADMIN_ACTIONS.contains(action));
+        // ── Determine what level of access this route needs ──────────────────
+        boolean needsAdmin = false;
+        boolean needsLogin = false;
 
-        if (requiresAdmin) {
-            HttpSession session = req.getSession(false);
-            User user = (session != null) ? (User) session.getAttribute("loggedInUser") : null;
+        switch (path) {
+            case "/vehicles":
+                if (VEHICLE_ADMIN.contains(action)) needsAdmin = true;
+                break;
+            case "/auth":
+                if (AUTH_ADMIN.contains(action)) needsAdmin = true;
+                break;
+            case "/booking":
+                if (BOOKING_ADMIN.contains(action))      needsAdmin = true;
+                else if (BOOKING_LOGIN.contains(action)) needsLogin = true;
+                break;
+        }
 
+        // ── Enforce access ───────────────────────────────────────────────────
+        if (needsAdmin) {
             if (user == null) {
                 res.sendRedirect(req.getContextPath() + "/auth?action=login");
                 return;
@@ -54,11 +76,15 @@ public class AuthFilter implements Filter {
                 res.sendRedirect(req.getContextPath() + "/auth?action=dashboard&error=unauthorized");
                 return;
             }
+        } else if (needsLogin) {
+            if (user == null) {
+                res.sendRedirect(req.getContextPath() + "/auth?action=login");
+                return;
+            }
         }
 
         chain.doFilter(request, response);
     }
 
-    @Override
-    public void destroy() {}
+    @Override public void destroy() {}
 }

@@ -1,0 +1,220 @@
+package com.vrp.servlet;
+
+import com.vrp.dao.BookingDAO;
+import com.vrp.dao.VehicleDAO;
+import com.vrp.model.Booking;
+import com.vrp.model.User;
+import com.vrp.model.Vehicle;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Front-controller servlet for the Booking module.
+ *
+ * GET  actions: form | confirm | my | adminList | updateStatus | cancel | delete
+ * POST actions: create
+ */
+@WebServlet("/booking")
+public class BookingServlet extends HttpServlet {
+
+    private BookingDAO bookingDAO;
+    private VehicleDAO vehicleDAO;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        String base = System.getProperty("user.home") + "/vrp_data/";
+        bookingDAO = new BookingDAO(base + "bookings.txt");
+        vehicleDAO = new VehicleDAO(base + "vehicles.txt");
+    }
+
+    // ── GET ──────────────────────────────────────────────────────────────────
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if (action == null) action = "my";
+
+        try {
+            switch (action) {
+
+                case "form": {
+                    String id = req.getParameter("id");
+                    Vehicle v = vehicleDAO.getVehicleById(id);
+                    if (v == null || !v.isAvailable()) {
+                        resp.sendRedirect(req.getContextPath() + "/vehicles?action=browse");
+                        return;
+                    }
+                    req.setAttribute("vehicle", v);
+                    req.setAttribute("today", LocalDate.now().toString());
+                    req.setAttribute("maxDate", LocalDate.now().plusYears(1).toString());
+                    req.getRequestDispatcher("/WEB-INF/views/bookingForm.jsp").forward(req, resp);
+                    return;
+                }
+
+                case "confirm": {
+                    String bid = req.getParameter("id");
+                    Booking b = bookingDAO.getBookingById(bid);
+                    if (b == null) {
+                        resp.sendRedirect(req.getContextPath() + "/booking?action=my");
+                        return;
+                    }
+                    req.setAttribute("booking", b);
+                    req.getRequestDispatcher("/WEB-INF/views/bookingConfirm.jsp").forward(req, resp);
+                    return;
+                }
+
+                case "my": {
+                    User u = sessionUser(req);
+                    if (u == null) { resp.sendRedirect(req.getContextPath() + "/auth?action=login"); return; }
+                    List<Booking> list = bookingDAO.getBookingsByUser(u.getUsername());
+                    req.setAttribute("bookings", list);
+                    req.getRequestDispatcher("/WEB-INF/views/myBookings.jsp").forward(req, resp);
+                    return;
+                }
+
+                case "adminList": {
+                    List<Booking> all = bookingDAO.getAllBookings();
+                    Map<String, Object> stats = bookingDAO.getStats();
+                    req.setAttribute("bookings", all);
+                    req.setAttribute("bookingStats", stats);
+                    req.getRequestDispatcher("/WEB-INF/views/listBookings.jsp").forward(req, resp);
+                    return;
+                }
+
+                case "updateStatus": {
+                    String bid    = req.getParameter("id");
+                    String status = req.getParameter("status");
+                    if (bid != null && status != null) {
+                        bookingDAO.updateStatus(bid, status.toUpperCase());
+                        // If confirming, mark vehicle as rented; if cancelling, mark available
+                        Booking b = bookingDAO.getBookingById(bid);
+                        if (b != null) {
+                            if ("CONFIRMED".equalsIgnoreCase(status)) {
+                                Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
+                                if (v2 != null) { v2.setAvailable(false); vehicleDAO.updateVehicle(v2); }
+                            } else if ("CANCELLED".equalsIgnoreCase(status)) {
+                                Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
+                                if (v2 != null) { v2.setAvailable(true); vehicleDAO.updateVehicle(v2); }
+                            } else if ("COMPLETED".equalsIgnoreCase(status)) {
+                                Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
+                                if (v2 != null) { v2.setAvailable(true); vehicleDAO.updateVehicle(v2); }
+                            }
+                        }
+                    }
+                    resp.sendRedirect(req.getContextPath() + "/booking?action=adminList&msg=updated");
+                    return;
+                }
+
+                case "cancel": {
+                    // Customer cancels their own booking
+                    User u = sessionUser(req);
+                    String bid = req.getParameter("id");
+                    if (u != null && bid != null) {
+                        Booking b = bookingDAO.getBookingById(bid);
+                        if (b != null && b.getCustomerUsername().equalsIgnoreCase(u.getUsername()) && b.isPending()) {
+                            bookingDAO.updateStatus(bid, "CANCELLED");
+                            Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
+                            if (v2 != null) { v2.setAvailable(true); vehicleDAO.updateVehicle(v2); }
+                        }
+                    }
+                    resp.sendRedirect(req.getContextPath() + "/booking?action=my&msg=cancelled");
+                    return;
+                }
+
+                case "delete": {
+                    // Admin only
+                    String bid = req.getParameter("id");
+                    if (bid != null) bookingDAO.deleteBooking(bid);
+                    resp.sendRedirect(req.getContextPath() + "/booking?action=adminList&msg=deleted");
+                    return;
+                }
+
+                default:
+                    resp.sendRedirect(req.getContextPath() + "/booking?action=my");
+            }
+        } catch (IOException e) {
+            throw new ServletException(e);
+        }
+    }
+
+    // ── POST ─────────────────────────────────────────────────────────────────
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        User user = sessionUser(req);
+        if (user == null) { resp.sendRedirect(req.getContextPath() + "/auth?action=login"); return; }
+
+        String vehicleId  = req.getParameter("vehicleId");
+        String startDate  = req.getParameter("startDate");
+        String endDate    = req.getParameter("endDate");
+
+        try {
+            Vehicle v = vehicleDAO.getVehicleById(vehicleId);
+            if (v == null || !v.isAvailable()) {
+                req.setAttribute("errorMsg", "This vehicle is no longer available.");
+                req.setAttribute("vehicle", v);
+                req.getRequestDispatcher("/WEB-INF/views/bookingForm.jsp").forward(req, resp);
+                return;
+            }
+
+            // Validate dates
+            String dateError = validateDates(startDate, endDate);
+            if (dateError != null) {
+                req.setAttribute("errorMsg", dateError);
+                req.setAttribute("vehicle", v);
+                req.setAttribute("today",   LocalDate.now().toString());
+                req.setAttribute("maxDate", LocalDate.now().plusYears(1).toString());
+                req.getRequestDispatcher("/WEB-INF/views/bookingForm.jsp").forward(req, resp);
+                return;
+            }
+
+            int    days      = Booking.daysBetween(startDate, endDate);
+            double totalCost = v.calculateRentalCost(days);
+            String bookingId = bookingDAO.nextBookingId();
+
+            Booking b = new Booking(
+                bookingId, v.getId(), v.getName(), v.getType(),
+                user.getUsername(), user.getName(),
+                startDate, endDate, days, v.getDailyRate(), totalCost,
+                "PENDING", LocalDate.now().toString()
+            );
+            bookingDAO.addBooking(b);
+
+            // Mark vehicle unavailable while booking is pending/confirmed
+            v.setAvailable(false);
+            vehicleDAO.updateVehicle(v);
+
+            resp.sendRedirect(req.getContextPath() + "/booking?action=confirm&id=" + bookingId);
+
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private User sessionUser(HttpServletRequest req) {
+        HttpSession s = req.getSession(false);
+        return s == null ? null : (User) s.getAttribute("loggedInUser");
+    }
+
+    private String validateDates(String start, String end) {
+        if (start == null || start.isEmpty()) return "Please select a start date.";
+        if (end   == null || end.isEmpty())   return "Please select an end date.";
+        try {
+            LocalDate s = LocalDate.parse(start);
+            LocalDate e = LocalDate.parse(end);
+            if (s.isBefore(LocalDate.now()))  return "Start date cannot be in the past.";
+            if (!e.isAfter(s))                return "End date must be after start date.";
+            if (Booking.daysBetween(start, end) > 365) return "Rental period cannot exceed 365 days.";
+        } catch (Exception ex) { return "Invalid date format."; }
+        return null;
+    }
+}

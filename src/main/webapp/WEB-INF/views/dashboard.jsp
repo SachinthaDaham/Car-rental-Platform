@@ -3,7 +3,8 @@
 <%
     request.setAttribute("nav", "dashboard");
     request.setAttribute("pageTitle", "Admin Dashboard — DriveLanka");
-    Map<String,Object> stats = (Map<String,Object>) request.getAttribute("stats");
+    Map<String,Object> stats        = (Map<String,Object>) request.getAttribute("stats");
+    Map<String,Object> bookingStats = (Map<String,Object>) request.getAttribute("bookingStats");
     List<Vehicle> recent     = (List<Vehicle>) request.getAttribute("recent");
     List<Vehicle> topEarners = (List<Vehicle>) request.getAttribute("topEarners");
     int total  = (Integer) stats.get("total");
@@ -16,6 +17,10 @@
     double fleetVal= (Double) stats.get("fleetValuePerDay");
     int utilPct = total > 0 ? (int)(rented * 100.0 / total) : 0;
     int availPct= total > 0 ? (int)(avail  * 100.0 / total) : 0;
+    int bTotal     = bookingStats != null ? ((Number) bookingStats.get("total")).intValue()     : 0;
+    long bPending  = bookingStats != null ? (Long) bookingStats.get("pending")   : 0;
+    long bConfirmed= bookingStats != null ? (Long) bookingStats.get("confirmed") : 0;
+    double bRevenue= bookingStats != null ? (Double) bookingStats.get("totalRevenue") : 0;
 %>
 <%@ include file="header.jspf" %>
 
@@ -64,6 +69,42 @@
         <p class="text-xs text-slate-400 mt-1"><%= k[3] %></p>
       </div>
     <% } %>
+  </div>
+
+  <!-- BOOKING KPI ROW -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl"><i class="bi bi-calendar-check-fill"></i></div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Bookings</p>
+      </div>
+      <p class="text-3xl font-extrabold text-ink-900"><%= bTotal %></p>
+      <p class="text-xs text-slate-400 mt-1"><a href="${pageContext.request.contextPath}/booking?action=adminList" class="text-brand-600 hover:underline">View all &rarr;</a></p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl"><i class="bi bi-hourglass-split"></i></div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Pending</p>
+      </div>
+      <p class="text-3xl font-extrabold text-ink-900"><%= bPending %></p>
+      <p class="text-xs text-slate-400 mt-1">Awaiting confirmation</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl"><i class="bi bi-check-circle-fill"></i></div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Confirmed</p>
+      </div>
+      <p class="text-3xl font-extrabold text-ink-900"><%= bConfirmed %></p>
+      <p class="text-xs text-slate-400 mt-1">Active rentals</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl"><i class="bi bi-cash-coin"></i></div>
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Booking Revenue</p>
+      </div>
+      <p class="text-2xl font-extrabold text-ink-900">LKR <%= String.format("%,.0f", bRevenue) %></p>
+      <p class="text-xs text-slate-400 mt-1">All non-cancelled</p>
+    </div>
   </div>
 
   <!-- MIDDLE ROW: Utilization + Composition + Breakdown -->

@@ -55,9 +55,11 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
       <a href="<%= ctx %>/vehicles?action=browse" class="hover:text-brand-600 transition <%= "browse".equals(current)?"text-brand-600 font-semibold":"" %>">Browse Fleet</a>
       <% if (sessionUser != null && sessionUser.isAdmin()) { %>
         <a href="<%= ctx %>/vehicles?action=dashboard" class="hover:text-brand-600 transition <%= "dashboard".equals(current)?"text-brand-600 font-semibold":"" %>">Dashboard</a>
-        <a href="<%= ctx %>/vehicles?action=list"      class="hover:text-brand-600 transition <%= "list".equals(current)?"text-brand-600 font-semibold":"" %>">Manage Fleet</a>
+        <a href="<%= ctx %>/vehicles?action=list"      class="hover:text-brand-600 transition <%= "list".equals(current)?"text-brand-600 font-semibold":"" %>">Fleet</a>
+        <a href="<%= ctx %>/booking?action=adminList"  class="hover:text-brand-600 transition <%= "bookings".equals(current)?"text-brand-600 font-semibold":"" %>">Bookings</a>
       <% } else if (sessionUser != null) { %>
         <a href="<%= ctx %>/auth?action=dashboard" class="hover:text-brand-600 transition">My Account</a>
+        <a href="<%= ctx %>/booking?action=my"     class="hover:text-brand-600 transition <%= "myBookings".equals(current)?"text-brand-600 font-semibold":"" %>">My Bookings</a>
       <% } %>
     </nav>
 
@@ -96,10 +98,12 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
       </a>
       <% if (sessionUser != null && sessionUser.isAdmin()) { %>
         <a href="<%= ctx %>/vehicles?action=dashboard" class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a href="<%= ctx %>/vehicles?action=list"      class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-table"></i> Manage Fleet</a>
+        <a href="<%= ctx %>/vehicles?action=list"      class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-table"></i> Fleet</a>
+        <a href="<%= ctx %>/booking?action=adminList"  class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-calendar-check"></i> Bookings</a>
         <a href="<%= ctx %>/vehicles?action=add"       class="px-3 py-2.5 rounded-lg bg-brand-600 text-white flex items-center gap-2 mt-1"><i class="bi bi-plus-lg"></i> Add Vehicle</a>
       <% } else if (sessionUser != null) { %>
         <a href="<%= ctx %>/auth?action=dashboard" class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-person"></i> My Account</a>
+        <a href="<%= ctx %>/booking?action=my"     class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-calendar-check"></i> My Bookings</a>
       <% } %>
       <div class="border-t border-slate-100 mt-2 pt-2">
         <% if (sessionUser != null) { %>
