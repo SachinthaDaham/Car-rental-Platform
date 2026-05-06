@@ -20,6 +20,14 @@
       <p class="text-slate-500 mt-1">Fill in the details to register a new vehicle in the fleet.</p>
     </div>
 
+    <%-- Server-side validation error --%>
+    <% String errMsg = (String) request.getAttribute("errorMsg"); %>
+    <% if (errMsg != null) { %>
+      <div class="mb-4 flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+        <i class="bi bi-exclamation-circle-fill text-rose-500"></i> <%= errMsg %>
+      </div>
+    <% } %>
+
     <form action="${pageContext.request.contextPath}/vehicles" method="post" class="space-y-6">
       <input type="hidden" name="action" value="create">
 

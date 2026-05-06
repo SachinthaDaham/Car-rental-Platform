@@ -28,6 +28,14 @@
       </div>
     </div>
 
+    <%-- Server-side validation error --%>
+    <% String errMsg = (String) request.getAttribute("errorMsg"); %>
+    <% if (errMsg != null) { %>
+      <div class="mb-4 flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+        <i class="bi bi-exclamation-circle-fill text-rose-500"></i> <%= errMsg %>
+      </div>
+    <% } %>
+
     <form action="${pageContext.request.contextPath}/vehicles" method="post" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 space-y-8">
       <input type="hidden" name="action" value="update">
       <!-- ID is readonly during edit since it's the primary key -->

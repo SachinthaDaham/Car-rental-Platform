@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.vrp.model.Vehicle" %>
 <%
     Vehicle v = (Vehicle) request.getAttribute("vehicle");
@@ -44,7 +44,6 @@
             <i class="bi bi-x-circle-fill mr-1"></i>Currently Rented
           </span>
         <% } %>
-        <!-- ID chip at bottom -->
         <span class="absolute bottom-5 left-5 bg-black/40 backdrop-blur text-white text-xs font-mono px-3 py-1.5 rounded-full">
           ID: <%= v.getId() %>
         </span>
@@ -66,7 +65,7 @@
 
         <!-- Spec grid -->
         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Specifications</h4>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
           <%
             String[][] specs = {
               {"bi-calendar3","Year",String.valueOf(v.getYear())},
@@ -87,24 +86,54 @@
           <% } %>
         </div>
 
-        <!-- Pricing box -->
-        <div class="mt-auto bg-gradient-to-br from-slate-50 to-brand-50 rounded-2xl p-5 border border-brand-100">
-          <div class="flex items-center justify-between mb-5">
-            <div>
-              <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Daily Rate</p>
-              <p class="text-3xl font-extrabold text-brand-700">LKR <%= String.format("%,.0f", v.getDailyRate()) %></p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-                Weekly
-                <span class="text-emerald-600 font-bold">
-                  -<%= String.format("%.0f", (1 - v.weeklyRate() / (v.getDailyRate() * 7)) * 100) %>%
-                </span>
-              </p>
-              <p class="text-xl font-bold text-ink-900">LKR <%= String.format("%,.0f", v.weeklyRate()) %></p>
+        <!-- ── Rental Cost Calculator ── -->
+        <div class="bg-gradient-to-br from-brand-50 to-slate-50 rounded-2xl p-5 border border-brand-100 mb-4">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1.5">
+            <i class="bi bi-calculator-fill text-brand-500"></i> Rental Cost Calculator
+          </h4>
+          <div class="flex items-center gap-3 mb-4">
+            <label class="text-sm font-semibold text-slate-600 whitespace-nowrap">Number of Days</label>
+            <div class="flex items-center gap-2">
+              <button id="daysDown" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-brand-50 hover:border-brand-300 font-bold text-lg flex items-center justify-center transition">−</button>
+              <input type="number" id="daysInput" value="1" min="1" max="365"
+                     class="w-20 text-center py-1.5 border border-slate-200 rounded-lg font-bold text-ink-900 text-sm outline-none focus:ring-2 focus:ring-brand-500">
+              <button id="daysUp" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-brand-50 hover:border-brand-300 font-bold text-lg flex items-center justify-center transition">+</button>
             </div>
           </div>
 
+          <!-- Quick day selectors -->
+          <div class="flex gap-2 mb-4 flex-wrap">
+            <% int[] presets = {1, 3, 7, 14, 30}; %>
+            <% for (int p : presets) { %>
+              <button class="day-preset px-3 py-1 text-xs font-semibold border border-slate-200 bg-white rounded-lg hover:border-brand-400 hover:text-brand-700 transition" data-days="<%= p %>">
+                <%= p %> day<%= p > 1 ? "s" : "" %>
+              </button>
+            <% } %>
+          </div>
+
+          <!-- Result panel -->
+          <div id="calcResult" class="bg-white rounded-xl border border-brand-100 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 uppercase font-semibold">Estimated Total</p>
+                <p id="calcTotal" class="text-2xl font-extrabold text-brand-700">LKR —</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Breakdown</p>
+                <p id="calcSummary" class="text-sm text-slate-600 font-medium">Select days above</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Daily + weekly reference -->
+          <div class="flex gap-4 mt-3 text-xs text-slate-500">
+            <span><i class="bi bi-sun text-brand-400"></i> Daily: <strong>LKR <%= String.format("%,.0f", v.getDailyRate()) %></strong></span>
+            <span><i class="bi bi-calendar2-week text-brand-400"></i> Weekly: <strong>LKR <%= String.format("%,.0f", v.weeklyRate()) %></strong></span>
+          </div>
+        </div>
+
+        <!-- Pricing box / Book CTA -->
+        <div class="mt-auto bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <% if (v.isAvailable()) { %>
             <% if (sessionUser != null) { %>
               <button onclick="window.showToast('Booking coming soon! Contact us to reserve.','info')"
@@ -124,7 +153,9 @@
             <div class="w-full text-center bg-slate-200 text-slate-500 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
               <i class="bi bi-x-circle"></i> Currently Unavailable
             </div>
-            <p class="text-center text-xs text-slate-400 mt-2">Check back soon or <a href="${pageContext.request.contextPath}/vehicles?action=browse" class="text-brand-600 hover:underline">browse other vehicles</a></p>
+            <p class="text-center text-xs text-slate-400 mt-2">
+              Check back soon or <a href="${pageContext.request.contextPath}/vehicles?action=browse" class="text-brand-600 hover:underline">browse other vehicles</a>
+            </p>
           <% } %>
         </div>
 
@@ -155,5 +186,50 @@
     </div>
   </div>
 </div>
+
+<script>
+(function() {
+  var vehicleId  = '<%= v.getId() %>';
+  var ctxPath    = '${pageContext.request.contextPath}';
+  var daysInput  = document.getElementById('daysInput');
+  var totalEl    = document.getElementById('calcTotal');
+  var summaryEl  = document.getElementById('calcSummary');
+
+  function calculate() {
+    var days = parseInt(daysInput.value) || 1;
+    if (days < 1) { daysInput.value = 1; days = 1; }
+    fetch(ctxPath + '/vehicles?action=calculate&id=' + vehicleId + '&days=' + days)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) return;
+        totalEl.textContent   = 'LKR ' + d.cost.toLocaleString('en-US', {maximumFractionDigits:0});
+        summaryEl.textContent = d.summary;
+      })
+      .catch(function() {
+        totalEl.textContent   = 'LKR —';
+        summaryEl.textContent = 'Unable to calculate';
+      });
+  }
+
+  document.getElementById('daysDown').addEventListener('click', function() {
+    var v = parseInt(daysInput.value)||1;
+    if (v > 1) { daysInput.value = v - 1; calculate(); }
+  });
+  document.getElementById('daysUp').addEventListener('click', function() {
+    daysInput.value = (parseInt(daysInput.value)||1) + 1; calculate();
+  });
+  daysInput.addEventListener('input', calculate);
+
+  document.querySelectorAll('.day-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      daysInput.value = this.dataset.days;
+      calculate();
+    });
+  });
+
+  // Initial calculation
+  calculate();
+})();
+</script>
 
 <%@ include file="footer.jspf" %>
