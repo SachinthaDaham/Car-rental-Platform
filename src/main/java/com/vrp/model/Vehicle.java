@@ -2,9 +2,13 @@ package com.vrp.model;
 
 /**
  * Abstract base class for all rentable vehicles.
- * Demonstrates ENCAPSULATION (private fields) and ABSTRACTION (abstract methods).
+ * Demonstrates:
+ *   - ENCAPSULATION  : all fields are private, accessed via getters/setters
+ *   - ABSTRACTION    : abstract methods force subclass contracts
+ *   - INHERITANCE    : Car, Bike, Van extend this class
+ *   - POLYMORPHISM   : abstract methods resolved at runtime per subclass
  */
-public abstract class Vehicle {
+public abstract class Vehicle implements Rentable {
     private String id;
     private String brand;
     private String model;
@@ -31,6 +35,7 @@ public abstract class Vehicle {
         this.description = description;
     }
 
+    // ── Getters / Setters (ENCAPSULATION) ──────────────────────────────────
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getBrand() { return brand; }
@@ -52,18 +57,39 @@ public abstract class Vehicle {
 
     public String getName() { return brand + " " + model; }
 
-    /** POLYMORPHIC: each subclass returns its own type label. */
+    // ── Abstract methods (POLYMORPHISM — resolved at runtime) ───────────────
+
+    /** Each subclass returns its own type label. */
     public abstract String getType();
 
-    /** POLYMORPHIC: each subclass formats spec line differently. */
+    /** Each subclass formats its specification line differently. */
     public abstract String getSpecLine();
 
-    /** POLYMORPHIC: each subclass provides icon class for UI. */
+    /** Each subclass provides a Bootstrap Icons class for the UI. */
     public abstract String getIconClass();
 
-    /** POLYMORPHIC: weekly discount differs by type (Bike 10%, Car 15%, Van 20%). */
+    /** Weekly rate discount differs per type: Bike 10%, Car 15%, Van 20%. */
     public abstract double weeklyRate();
 
+    // ── Rentable interface (INTERFACE POLYMORPHISM) ─────────────────────────
+    // Default implementation: subclasses override to add surcharges.
+    @Override
+    public double calculateRentalCost(int days) {
+        if (days <= 0) return 0;
+        if (days >= 7) {
+            int weeks = days / 7;
+            int rem   = days % 7;
+            return weeks * weeklyRate() + rem * dailyRate;
+        }
+        return days * dailyRate;
+    }
+
+    @Override
+    public String getRentalSummary(int days) {
+        return String.format("%d day(s) x LKR %.0f = LKR %.0f", days, dailyRate, calculateRentalCost(days));
+    }
+
+    // ── File serialisation ──────────────────────────────────────────────────
     public String toFileString() {
         return String.join("|",
                 getType(), safe(id), safe(brand), safe(model),
@@ -73,7 +99,7 @@ public abstract class Vehicle {
                 extra1(), extra2());
     }
 
-    /** Subclasses serialize their two extra fields. */
+    /** Subclasses serialize their two type-specific fields. */
     protected abstract String extra1();
     protected abstract String extra2();
 
