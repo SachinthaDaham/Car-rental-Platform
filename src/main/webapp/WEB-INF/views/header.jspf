@@ -70,7 +70,7 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
     <!-- Desktop right actions -->
     <div class="hidden md:flex items-center gap-2">
       <% if (sessionUser != null) { %>
-        <span class="text-sm text-slate-500 font-medium">Hi, <strong><%= sessionUser.getName().split(" ")[0] %></strong></span>
+        <span class="text-sm text-slate-500 font-medium">Hi, <strong><%= (sessionUser.getName() != null && !sessionUser.getName().isEmpty()) ? sessionUser.getName().split(" ")[0] : sessionUser.getUsername() %></strong></span>
         <% if (sessionUser.isAdmin()) { %>
           <a href="<%= ctx %>/vehicles?action=add" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-btn transition">
             <i class="bi bi-plus-lg"></i> Add Vehicle
@@ -144,8 +144,24 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
   (function() {
     var u = new URLSearchParams(window.location.search);
     var m = u.get('msg');
-    var toasts = { created:'Vehicle added successfully!', updated:'Vehicle updated!', deleted:'Vehicle deleted.', toggled:'Availability updated.' };
-    if (m && toasts[m]) { setTimeout(function(){ window.showToast(toasts[m], m==='deleted'?'info':'success'); }, 300); }
+    var toasts = {
+      created:'Vehicle added successfully!', updated:'Vehicle updated!', deleted:'Vehicle deleted.', toggled:'Availability updated.',
+      booking_created:'Booking confirmed! Proceed to payment.',
+      booking_cancelled:'Booking cancelled.',
+      payment_success:'Payment successful! Booking confirmed.',
+      payment_failed:'Payment failed. Please try again.',
+      profile_updated:'Profile updated successfully.',
+      password_changed:'Password changed.',
+      chat_sent:'Message sent to support.',
+      status_updated:'Booking status updated.',
+      user_deleted:'User removed.'
+    };
+    var types = {
+      created:'success', updated:'success', deleted:'info', toggled:'info',
+      booking_created:'success', booking_cancelled:'info', payment_success:'success', payment_failed:'error',
+      profile_updated:'success', password_changed:'success', chat_sent:'info', status_updated:'success', user_deleted:'info'
+    };
+    if (m && toasts[m]) { setTimeout(function(){ window.showToast(toasts[m], types[m]||'info'); }, 300); }
   })();
 </script>
 

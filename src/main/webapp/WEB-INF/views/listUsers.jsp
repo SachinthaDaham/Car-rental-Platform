@@ -101,7 +101,7 @@
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white font-extrabold text-sm shrink-0">
-                        <%= u.getName().substring(0, 1).toUpperCase() %>
+                        <%= (u.getName() != null && !u.getName().isEmpty()) ? u.getName().substring(0, 1).toUpperCase() : u.getUsername().substring(0, 1).toUpperCase() %>
                       </div>
                       <p class="font-bold text-ink-900"><%= u.getName() %></p>
                     </div>

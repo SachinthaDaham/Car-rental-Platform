@@ -41,7 +41,7 @@
           </span>
         <% } else { %>
           <span class="absolute top-5 right-5 bg-slate-800/80 text-white text-xs font-bold uppercase px-3 py-1.5 rounded-full shadow-sm">
-            <i class="bi bi-x-circle-fill mr-1"></i>Currently Rented
+            <i class="bi bi-slash-circle-fill mr-1"></i>Not Available
           </span>
         <% } %>
         <span class="absolute bottom-5 left-5 bg-black/40 backdrop-blur text-white text-xs font-mono px-3 py-1.5 rounded-full">

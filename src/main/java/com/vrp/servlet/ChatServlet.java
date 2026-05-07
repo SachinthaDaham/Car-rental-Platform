@@ -68,27 +68,32 @@ public class ChatServlet extends HttpServlet {
 
                 // ── Conversation list as JSON (admin, for live polling) ───────
                 case "conversations": {
-                    if (!user.isAdmin()) { resp.getWriter().write("[]"); return; }
                     resp.setContentType("application/json;charset=UTF-8");
-                    List<Map<String, Object>> convs = chatDAO.getConversationList();
-                    PrintWriter pw = resp.getWriter();
-                    pw.write("[");
-                    for (int i = 0; i < convs.size(); i++) {
-                        if (i > 0) pw.write(",");
-                        Map<String, Object> cv = convs.get(i);
-                        String cid  = (String) cv.get("conversationId");
-                        ChatMessage lm = (ChatMessage) cv.get("lastMessage");
-                        long unread = (Long) cv.get("unreadCount");
-                        int  cnt    = (Integer) cv.get("messageCount");
-                        String preview = lm.getContent().length() > 60
-                            ? lm.getContent().substring(0, 60) + "…" : lm.getContent();
-                        pw.write(String.format(
-                            "{\"id\":\"%s\",\"preview\":\"%s\",\"time\":\"%s\"," +
-                            "\"unread\":%d,\"count\":%d,\"fromAdmin\":%b}",
-                            esc(cid), esc(preview), esc(lm.getShortTime()),
-                            unread, cnt, lm.isFromAdmin()));
+                    if (user == null || !user.isAdmin()) { resp.getWriter().write("[]"); return; }
+                    try {
+                        List<Map<String, Object>> convs = chatDAO.getConversationList();
+                        StringBuilder sb = new StringBuilder("[");
+                        for (int i = 0; i < convs.size(); i++) {
+                            if (i > 0) sb.append(",");
+                            Map<String, Object> cv = convs.get(i);
+                            String cid  = (String) cv.get("conversationId");
+                            ChatMessage lm = (ChatMessage) cv.get("lastMessage");
+                            long unread = (Long) cv.get("unreadCount");
+                            int  cnt    = (Integer) cv.get("messageCount");
+                            String rawContent = lm.getContent() == null ? "" : lm.getContent();
+                            String preview = rawContent.length() > 60
+                                ? rawContent.substring(0, 60) + "…" : rawContent;
+                            sb.append(String.format(
+                                "{\"id\":\"%s\",\"preview\":\"%s\",\"time\":\"%s\"," +
+                                "\"unread\":%d,\"count\":%d,\"fromAdmin\":%b}",
+                                esc(cid), esc(preview), esc(lm.getShortTime()),
+                                unread, cnt, lm.isFromAdmin()));
+                        }
+                        sb.append("]");
+                        resp.getWriter().write(sb.toString());
+                    } catch (Exception ex) {
+                        resp.getWriter().write("[]");
                     }
-                    pw.write("]");
                     return;
                 }
 

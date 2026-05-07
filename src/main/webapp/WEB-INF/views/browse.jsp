@@ -137,7 +137,7 @@
           </div>
           <div>
             <p class="text-sm text-slate-700 font-semibold group-hover:text-brand-600 transition">Available Only</p>
-            <p class="text-[10px] text-slate-400">Hide currently rented vehicles</p>
+            <p class="text-[10px] text-slate-400">Hide admin-blocked vehicles</p>
           </div>
         </label>
 
@@ -228,7 +228,7 @@
                   <% } %>
                 <% } else { %>
                   <span class="inline-flex items-center gap-1.5 bg-black/50 text-white text-xs px-5 py-2.5 rounded-xl font-semibold backdrop-blur">
-                    <i class="bi bi-x-circle"></i> Currently Rented
+                    <i class="bi bi-slash-circle"></i> Not Available
                   </span>
                 <% } %>
               </div>
@@ -242,7 +242,7 @@
                 </span>
               <% } else { %>
                 <span class="absolute top-3 right-3 bg-slate-800/70 backdrop-blur text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">
-                  <i class="bi bi-clock-fill mr-0.5"></i>Rented
+                  <i class="bi bi-slash-circle-fill mr-0.5"></i>Blocked
                 </span>
               <% } %>
             </div>

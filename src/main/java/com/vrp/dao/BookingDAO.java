@@ -78,6 +78,38 @@ public class BookingDAO {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Returns true if the given date range overlaps with any PENDING or CONFIRMED booking
+     * for the specified vehicle. Uses exclusive-end convention: conflict when
+     * newStart < bookedEnd AND bookedStart < newEnd.
+     */
+    public boolean hasDateConflict(String vehicleId, String startDate, String endDate) throws IOException {
+        LocalDate ns = LocalDate.parse(startDate);
+        LocalDate ne = LocalDate.parse(endDate);
+        for (Booking b : getAllBookings()) {
+            if (!b.getVehicleId().equalsIgnoreCase(vehicleId)) continue;
+            if (b.isCancelled() || b.isCompleted()) continue;
+            LocalDate bs = LocalDate.parse(b.getStartDate());
+            LocalDate be = LocalDate.parse(b.getEndDate());
+            if (ns.isBefore(be) && bs.isBefore(ne)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns all PENDING/CONFIRMED booked date ranges for a vehicle
+     * as a list of {startDate, endDate} string pairs.
+     */
+    public List<String[]> getBookedDateRanges(String vehicleId) throws IOException {
+        List<String[]> ranges = new ArrayList<>();
+        for (Booking b : getAllBookings()) {
+            if (!b.getVehicleId().equalsIgnoreCase(vehicleId)) continue;
+            if (b.isCancelled() || b.isCompleted()) continue;
+            ranges.add(new String[]{b.getStartDate(), b.getEndDate()});
+        }
+        return ranges;
+    }
+
     // ── UPDATE status ────────────────────────────────────────────────────────
     public synchronized boolean updateStatus(String bookingId, String newStatus) throws IOException {
         List<Booking> all = getAllBookings();

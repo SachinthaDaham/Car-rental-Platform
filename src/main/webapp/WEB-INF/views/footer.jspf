@@ -221,7 +221,7 @@
           msgs.innerHTML =
             '<div class="text-center py-6">' +
               '<div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3"><i class="bi bi-chat-heart text-brand-500 text-xl"></i></div>' +
-              '<p class="text-slate-600 font-semibold text-sm">Hi, <%= footerUser.getName().split(" ")[0] %>!</p>' +
+              '<p class="text-slate-600 font-semibold text-sm">Hi, <%= (footerUser.getName() != null && !footerUser.getName().isEmpty()) ? footerUser.getName().split(" ")[0] : footerUser.getUsername() %>!</p>' +
               '<p class="text-slate-400 text-xs mt-1">How can we help you today? Send us a message!</p>' +
             '</div>';
         }
@@ -278,12 +278,19 @@
     var shortTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
     appendMsg('CUSTOMER', content, shortTime);
 
-    var fd = new FormData();
-    fd.append('content', content);
-    fetch(CTX + '/chat', { method:'POST', body:fd })
+    var body = new URLSearchParams();
+    body.append('action', 'send');
+    body.append('content', content);
+    fetch(CTX + '/chat', { method:'POST', body:body, headers:{'Content-Type':'application/x-www-form-urlencoded'} })
       .then(function(r){ return r.json(); })
       .then(function(d) {
-        if (d.success) lastTs = d.timestamp;
+        if (d.success) { lastTs = d.timestamp; }
+        else {
+          // Server rejected — show failed indicator
+          var msgs = document.getElementById('chatMsgs');
+          var last = msgs.lastElementChild;
+          if (last) last.querySelector('p.text-\\[10px\\]').textContent += ' ✗ failed';
+        }
         input.disabled = false;
         input.focus();
       })

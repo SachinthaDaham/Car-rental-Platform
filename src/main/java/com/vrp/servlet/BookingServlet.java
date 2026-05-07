@@ -52,9 +52,19 @@ public class BookingServlet extends HttpServlet {
                         resp.sendRedirect(req.getContextPath() + "/vehicles?action=browse");
                         return;
                     }
+                    // Pass booked ranges as JSON so the date picker can block conflicts
+                    List<String[]> bookedRanges = bookingDAO.getBookedDateRanges(id);
+                    StringBuilder rangesJson = new StringBuilder("[");
+                    for (int i = 0; i < bookedRanges.size(); i++) {
+                        if (i > 0) rangesJson.append(",");
+                        rangesJson.append("{\"start\":\"").append(bookedRanges.get(i)[0])
+                                  .append("\",\"end\":\"").append(bookedRanges.get(i)[1]).append("\"}");
+                    }
+                    rangesJson.append("]");
                     req.setAttribute("vehicle", v);
                     req.setAttribute("today", LocalDate.now().toString());
                     req.setAttribute("maxDate", LocalDate.now().plusYears(1).toString());
+                    req.setAttribute("bookedRangesJson", rangesJson.toString());
                     req.getRequestDispatcher("/WEB-INF/views/bookingForm.jsp").forward(req, resp);
                     return;
                 }
@@ -94,18 +104,16 @@ public class BookingServlet extends HttpServlet {
                     String status = req.getParameter("status");
                     if (bid != null && status != null) {
                         bookingDAO.updateStatus(bid, status.toUpperCase());
-                        // If confirming, mark vehicle as rented; if cancelling, mark available
+                        // On cancel/complete, ensure vehicle is re-enabled
+                        // (undoes any legacy available=false set by old booking logic)
                         Booking b = bookingDAO.getBookingById(bid);
                         if (b != null) {
-                            if ("CONFIRMED".equalsIgnoreCase(status)) {
+                            if ("CANCELLED".equalsIgnoreCase(status) || "COMPLETED".equalsIgnoreCase(status)) {
                                 Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
-                                if (v2 != null) { v2.setAvailable(false); vehicleDAO.updateVehicle(v2); }
-                            } else if ("CANCELLED".equalsIgnoreCase(status)) {
-                                Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
-                                if (v2 != null) { v2.setAvailable(true); vehicleDAO.updateVehicle(v2); }
-                            } else if ("COMPLETED".equalsIgnoreCase(status)) {
-                                Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
-                                if (v2 != null) { v2.setAvailable(true); vehicleDAO.updateVehicle(v2); }
+                                if (v2 != null && !v2.isAvailable()) {
+                                    v2.setAvailable(true);
+                                    vehicleDAO.updateVehicle(v2);
+                                }
                             }
                         }
                     }
@@ -121,8 +129,12 @@ public class BookingServlet extends HttpServlet {
                         Booking b = bookingDAO.getBookingById(bid);
                         if (b != null && b.getCustomerUsername().equalsIgnoreCase(u.getUsername()) && b.isPending()) {
                             bookingDAO.updateStatus(bid, "CANCELLED");
+                            // Re-enable vehicle if it was set unavailable by legacy logic
                             Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
-                            if (v2 != null) { v2.setAvailable(true); vehicleDAO.updateVehicle(v2); }
+                            if (v2 != null && !v2.isAvailable()) {
+                                v2.setAvailable(true);
+                                vehicleDAO.updateVehicle(v2);
+                            }
                         }
                     }
                     resp.sendRedirect(req.getContextPath() + "/booking?action=my&msg=cancelled");
@@ -172,6 +184,26 @@ public class BookingServlet extends HttpServlet {
                 req.setAttribute("vehicle", v);
                 req.setAttribute("today",   LocalDate.now().toString());
                 req.setAttribute("maxDate", LocalDate.now().plusYears(1).toString());
+                req.setAttribute("bookedRangesJson", "[]");
+                req.getRequestDispatcher("/WEB-INF/views/bookingForm.jsp").forward(req, resp);
+                return;
+            }
+
+            // Check for date conflicts with existing bookings
+            if (bookingDAO.hasDateConflict(vehicleId, startDate, endDate)) {
+                List<String[]> bookedRanges = bookingDAO.getBookedDateRanges(vehicleId);
+                StringBuilder rangesJson = new StringBuilder("[");
+                for (int i = 0; i < bookedRanges.size(); i++) {
+                    if (i > 0) rangesJson.append(",");
+                    rangesJson.append("{\"start\":\"").append(bookedRanges.get(i)[0])
+                              .append("\",\"end\":\"").append(bookedRanges.get(i)[1]).append("\"}");
+                }
+                rangesJson.append("]");
+                req.setAttribute("errorMsg", "Those dates conflict with an existing booking. Please choose different dates.");
+                req.setAttribute("vehicle", v);
+                req.setAttribute("today",   LocalDate.now().toString());
+                req.setAttribute("maxDate", LocalDate.now().plusYears(1).toString());
+                req.setAttribute("bookedRangesJson", rangesJson.toString());
                 req.getRequestDispatcher("/WEB-INF/views/bookingForm.jsp").forward(req, resp);
                 return;
             }
@@ -187,10 +219,6 @@ public class BookingServlet extends HttpServlet {
                 "PENDING", LocalDate.now().toString()
             );
             bookingDAO.addBooking(b);
-
-            // Mark vehicle unavailable while booking is pending/confirmed
-            v.setAvailable(false);
-            vehicleDAO.updateVehicle(v);
 
             resp.sendRedirect(req.getContextPath() + "/booking?action=confirm&id=" + bookingId);
 

@@ -47,13 +47,30 @@
 
 <div class="max-w-7xl mx-auto px-6 -mt-6 pb-16 space-y-8">
 
+  <!-- Pending Bookings Alert -->
+  <% if (bPending > 0) { %>
+  <div class="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-sm">
+    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 text-xl">
+      <i class="bi bi-hourglass-split"></i>
+    </div>
+    <div class="flex-1">
+      <p class="font-bold text-amber-800 text-sm"><%= bPending %> booking<%= bPending!=1?"s":"" %> awaiting confirmation</p>
+      <p class="text-amber-600 text-xs mt-0.5">Review and confirm pending payments from customers.</p>
+    </div>
+    <a href="${pageContext.request.contextPath}/booking?action=adminList"
+       class="shrink-0 inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+      Review <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+  <% } %>
+
   <!-- KPI CARDS -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <%
       Object[][] kpis = {
         {"bi-collection-fill","Total Fleet",String.valueOf(total),"All vehicles","bg-brand-50 text-brand-600"},
         {"bi-check-circle-fill","Available",String.valueOf(avail),avail+" ready to rent","bg-emerald-50 text-emerald-600"},
-        {"bi-key-fill","Currently Rented",String.valueOf(rented),rented+" on the road","bg-rose-50 text-rose-600"},
+        {"bi-slash-circle-fill","Not Available",String.valueOf(rented),rented+" admin-blocked","bg-rose-50 text-rose-600"},
         {"bi-cash-stack","Fleet Value/Day","Rs "+String.format("%,.0f",fleetVal),"Avg Rs "+String.format("%,.0f",avgRate)+"/vehicle","bg-amber-50 text-amber-600"}
       };
       for(Object[] k:kpis){
@@ -133,7 +150,7 @@
         </div>
         <div class="bg-rose-50 rounded-xl p-3 text-center">
           <p class="text-xl font-extrabold text-rose-600"><%= rented %></p>
-          <p class="text-xs text-slate-500 font-medium">Rented</p>
+          <p class="text-xs text-slate-500 font-medium">Blocked</p>
         </div>
       </div>
     </div>
@@ -169,11 +186,11 @@
         <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Availability Rate</p>
         <div class="h-3 bg-slate-100 rounded-full overflow-hidden flex">
           <div class="h-full bg-emerald-400 transition-all duration-700" style="width:<%= availPct %>%" title="<%= avail %> available"></div>
-          <div class="h-full bg-rose-400 transition-all duration-700" style="width:<%= 100-availPct %>%" title="<%= rented %> rented"></div>
+          <div class="h-full bg-rose-400 transition-all duration-700" style="width:<%= 100-availPct %>%" title="<%= rented %> not available"></div>
         </div>
         <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span><%= availPct %>% Available</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span><%= 100-availPct %>% Rented</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span><%= 100-availPct %>% Blocked</span>
         </div>
       </div>
     </div>
@@ -227,6 +244,16 @@
             <p class="text-xs text-slate-400">View registered accounts</p>
           </div>
         </a>
+        <a href="${pageContext.request.contextPath}/chat?action=admin" class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-rose-200 hover:bg-rose-50 transition group">
+          <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition relative">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span id="dashChatBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 group-hover:bg-white text-white group-hover:text-rose-600 text-[9px] font-bold flex items-center justify-center border border-white"></span>
+          </div>
+          <div>
+            <p class="font-semibold text-sm text-ink-900">Live Chat</p>
+            <p class="text-xs text-slate-400">Reply to customer messages</p>
+          </div>
+        </a>
       </div>
     </div>
   </div>
@@ -241,7 +268,7 @@
     <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-5 text-white shadow-card">
       <p class="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-1">Current Active Revenue</p>
       <p class="text-3xl font-extrabold">LKR <%= String.format("%,.0f", fleetVal * rented / Math.max(total,1)) %></p>
-      <p class="text-emerald-100 text-xs mt-1">From <%= rented %> rented vehicle<%= rented!=1?"s":"" %></p>
+      <p class="text-emerald-100 text-xs mt-1">Based on <%= rented %> blocked vehicle<%= rented!=1?"s":"" %></p>
     </div>
     <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-white shadow-card">
       <p class="text-amber-100 text-xs font-bold uppercase tracking-wider mb-1">Avg Daily Rate</p>
@@ -322,7 +349,7 @@
                 <% if (v.isAvailable()) { %>
                   <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">Available</span>
                 <% } else { %>
-                  <span class="bg-rose-100 text-rose-700 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">Rented</span>
+                  <span class="bg-rose-100 text-rose-700 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">Blocked</span>
                 <% } %>
               </td>
             </tr>

@@ -28,11 +28,11 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       <div class="flex items-center gap-5">
         <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-extrabold border-2 border-white/30 shrink-0">
-          <%= user.getName().substring(0, 1).toUpperCase() %>
+          <%= (user.getName() != null && !user.getName().isEmpty()) ? user.getName().substring(0, 1).toUpperCase() : user.getUsername().substring(0, 1).toUpperCase() %>
         </div>
         <div>
           <p class="text-brand-200 text-sm font-semibold uppercase tracking-wider">Customer Dashboard</p>
-          <h1 class="text-3xl font-extrabold tracking-tight mt-0.5">Welcome back, <%= user.getName().split(" ")[0] %>!</h1>
+          <h1 class="text-3xl font-extrabold tracking-tight mt-0.5">Welcome back, <%= (user.getName() != null && !user.getName().isEmpty()) ? user.getName().split(" ")[0] : user.getUsername() %>!</h1>
           <p class="text-brand-100 mt-1 text-sm">Manage your rentals and explore our fleet across Sri Lanka.</p>
         </div>
         <div class="ml-auto hidden sm:flex gap-3">

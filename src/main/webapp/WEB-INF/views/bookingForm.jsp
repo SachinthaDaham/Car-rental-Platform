@@ -7,9 +7,11 @@
         return;
     }
     request.setAttribute("pageTitle", "Book " + v.getName() + " — DriveLanka");
-    String today   = (String) request.getAttribute("today");
-    String maxDate = (String) request.getAttribute("maxDate");
-    String errMsg  = (String) request.getAttribute("errorMsg");
+    String today          = (String) request.getAttribute("today");
+    String maxDate        = (String) request.getAttribute("maxDate");
+    String errMsg         = (String) request.getAttribute("errorMsg");
+    String bookedRangesJson = (String) request.getAttribute("bookedRangesJson");
+    if (bookedRangesJson == null) bookedRangesJson = "[]";
 %>
 <%@ include file="header.jspf" %>
 
@@ -115,6 +117,26 @@
               <% } %>
             </div>
           </div>
+
+          <!-- Date conflict warning -->
+          <div id="dateConflictAlert" class="hidden flex items-start gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+            <i class="bi bi-calendar-x-fill text-rose-500 shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-bold">Date Conflict</p>
+              <p id="dateConflictMsg" class="mt-0.5 font-normal">Those dates overlap with an existing booking.</p>
+            </div>
+          </div>
+
+          <!-- Booked periods for this vehicle -->
+          <% if (!bookedRangesJson.equals("[]")) { %>
+          <div class="bg-amber-50 border border-amber-100 rounded-xl p-4">
+            <p class="text-xs font-bold text-amber-800 flex items-center gap-1.5 mb-2">
+              <i class="bi bi-calendar-week text-amber-600"></i> Already Booked Periods
+            </p>
+            <div id="bookedRangesList" class="space-y-1.5"></div>
+            <p class="text-[11px] text-amber-600 mt-2">You cannot select dates that overlap with these periods.</p>
+          </div>
+          <% } %>
         </div>
 
         <!-- Cost Summary -->
@@ -184,11 +206,76 @@
 
 <script>
 (function() {
-  var startEl = document.getElementById('startDate');
-  var endEl   = document.getElementById('endDate');
+  var startEl   = document.getElementById('startDate');
+  var endEl     = document.getElementById('endDate');
+  var submitBtn = document.getElementById('submitBtn');
   var dailyRate = <%= v.getDailyRate() %>;
   var vehicleId = '<%= v.getId() %>';
   var ctx       = '${pageContext.request.contextPath}';
+
+  // Booked date ranges from server (exclusive end dates)
+  var BOOKED_RANGES = <%= bookedRangesJson %>;
+
+  // Render booked periods list
+  var listEl = document.getElementById('bookedRangesList');
+  if (listEl && BOOKED_RANGES.length) {
+    BOOKED_RANGES.forEach(function(r) {
+      var row = document.createElement('div');
+      row.className = 'flex items-center gap-2 text-xs text-amber-700';
+      row.innerHTML =
+        '<i class="bi bi-dash-circle-fill text-rose-400 shrink-0"></i>' +
+        '<span class="font-semibold">' + formatDate(r.start) + '</span>' +
+        '<span class="text-amber-500">→</span>' +
+        '<span class="font-semibold">' + formatDate(r.end) + '</span>' +
+        '<span class="text-amber-500 text-[10px]">(unavailable)</span>';
+      listEl.appendChild(row);
+    });
+  }
+
+  function formatDate(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+  }
+
+  function hasConflict(startVal, endVal) {
+    if (!startVal || !endVal) return false;
+    var ns = new Date(startVal + 'T00:00:00');
+    var ne = new Date(endVal   + 'T00:00:00');
+    for (var i = 0; i < BOOKED_RANGES.length; i++) {
+      var bs = new Date(BOOKED_RANGES[i].start + 'T00:00:00');
+      var be = new Date(BOOKED_RANGES[i].end   + 'T00:00:00');
+      if (ns < be && bs < ne) return true;
+    }
+    return false;
+  }
+
+  function checkConflictAndUpdate() {
+    var s = startEl.value, e = endEl.value;
+    var alertEl = document.getElementById('dateConflictAlert');
+    var msgEl   = document.getElementById('dateConflictMsg');
+    if (s && e && hasConflict(s, e)) {
+      // Find which range conflicts
+      var ns = new Date(s + 'T00:00:00'), ne = new Date(e + 'T00:00:00');
+      var conflictRange = null;
+      for (var i = 0; i < BOOKED_RANGES.length; i++) {
+        var bs = new Date(BOOKED_RANGES[i].start + 'T00:00:00');
+        var be = new Date(BOOKED_RANGES[i].end   + 'T00:00:00');
+        if (ns < be && bs < ne) { conflictRange = BOOKED_RANGES[i]; break; }
+      }
+      alertEl.classList.remove('hidden');
+      if (conflictRange) {
+        msgEl.textContent = 'Conflicts with booking ' + formatDate(conflictRange.start) + ' → ' + formatDate(conflictRange.end) + '. Please pick other dates.';
+      }
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+      alertEl.classList.add('hidden');
+      if (s && e) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+  }
 
   function refreshCost() {
     var s = startEl.value, e = endEl.value;
@@ -210,7 +297,6 @@
         document.getElementById('brDays').textContent    = days;
         document.getElementById('brTotal').textContent   = 'LKR ' + d.cost.toLocaleString('en-US', {maximumFractionDigits: 0});
         document.getElementById('costBreakdown').classList.remove('hidden');
-        // Show discount if summary indicates one
         if (d.summary && (d.summary.includes('discount') || d.summary.includes('insurance'))) {
           document.getElementById('brDiscountRow').classList.remove('hidden');
           document.getElementById('brDiscountLabel').textContent = d.summary.split('·').slice(1).join('·').trim() || 'Pricing applied';
@@ -219,35 +305,43 @@
   }
 
   startEl.addEventListener('change', function() {
-    // Ensure end is after start
     if (endEl.value && endEl.value <= this.value) endEl.value = '';
     endEl.min = this.value;
+    checkConflictAndUpdate();
     refreshCost();
   });
-  endEl.addEventListener('change', refreshCost);
+  endEl.addEventListener('change', function() {
+    checkConflictAndUpdate();
+    refreshCost();
+  });
 
   // Duration quick-select
   document.querySelectorAll('.duration-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var days = parseInt(this.dataset.days);
-      var base = startEl.value ? new Date(startEl.value) : new Date();
+      var base = startEl.value ? new Date(startEl.value + 'T00:00:00') : new Date();
       if (!startEl.value) {
-        // set start to today
         startEl.value = base.toISOString().split('T')[0];
       }
-      var end = new Date(startEl.value);
+      var end = new Date(startEl.value + 'T00:00:00');
       end.setDate(end.getDate() + days);
       endEl.value = end.toISOString().split('T')[0];
       endEl.min = startEl.value;
+      checkConflictAndUpdate();
       refreshCost();
     });
   });
 
-  // Spinner on submit
-  document.getElementById('bookingForm').addEventListener('submit', function() {
+  // Block submit if conflict
+  document.getElementById('bookingForm').addEventListener('submit', function(e) {
+    if (hasConflict(startEl.value, endEl.value)) {
+      e.preventDefault();
+      checkConflictAndUpdate();
+      return false;
+    }
     document.getElementById('btnText').textContent = 'Processing…';
     document.getElementById('btnSpinner').classList.remove('hidden');
-    document.getElementById('submitBtn').disabled = true;
+    submitBtn.disabled = true;
   });
 })();
 </script>

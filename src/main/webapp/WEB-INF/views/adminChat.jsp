@@ -296,11 +296,11 @@ function sendAdminMessage() {
   inp.value    = '';
   inp.disabled = true;
 
-  var fd = new FormData();
-  fd.append('content', content);
-  fd.append('with', ACTIVE);
+  var body = new URLSearchParams();
+  body.append('content', content);
+  body.append('with', ACTIVE);
 
-  fetch(CTX + '/chat', { method:'POST', body:fd })
+  fetch(CTX + '/chat', { method:'POST', body:body, headers:{'Content-Type':'application/x-www-form-urlencoded'} })
     .then(function(r){ return r.json(); })
     .then(function(d) {
       if (d.success) {
