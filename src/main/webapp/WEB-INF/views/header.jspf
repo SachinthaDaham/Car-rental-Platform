@@ -20,7 +20,7 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
         theme: {
           extend: {
             colors: {
-              brand: { 50:'#eef9ff',100:'#daf1ff',500:'#0ea5e9',600:'#0284c7',700:'#0369a1',900:'#0c4a6e' },
+              brand: { 50:'#eef9ff',100:'#daf1ff',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1',800:'#075985',900:'#0c4a6e' },
               ink:   { 900:'#0b1220',800:'#111827',700:'#1f2937' }
             },
             fontFamily: { sans:['Inter','system-ui','sans-serif'] },
