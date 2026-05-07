@@ -16,7 +16,7 @@ import java.util.Set;
  * Demonstrates the FILTER design pattern — security is a cross-cutting concern
  * kept separate from business logic, applied declaratively via annotation.
  */
-@WebFilter(urlPatterns = {"/vehicles", "/auth", "/booking"})
+@WebFilter(urlPatterns = {"/vehicles", "/auth", "/booking", "/payment", "/chat"})
 public class AuthFilter implements Filter {
 
     // Admin-only actions per servlet path
@@ -29,10 +29,12 @@ public class AuthFilter implements Filter {
     private static final Set<String> BOOKING_ADMIN = Set.of(
         "adminList", "updateStatus", "delete"
     );
-    // Booking actions that require any logged-in user
     private static final Set<String> BOOKING_LOGIN = Set.of(
         "form", "create", "my", "confirm", "cancel"
     );
+    private static final Set<String> CHAT_ADMIN = Set.of("admin");
+    private static final Set<String> CHAT_LOGIN = Set.of("history", "poll", "unread", "send");
+    private static final Set<String> PAYMENT_LOGIN = Set.of("form", "create", "success");
 
     @Override public void init(FilterConfig fc) throws ServletException {}
 
@@ -63,6 +65,13 @@ public class AuthFilter implements Filter {
             case "/booking":
                 if (BOOKING_ADMIN.contains(action))      needsAdmin = true;
                 else if (BOOKING_LOGIN.contains(action)) needsLogin = true;
+                break;
+            case "/payment":
+                if (PAYMENT_LOGIN.contains(action) || action.isEmpty()) needsLogin = true;
+                break;
+            case "/chat":
+                if (CHAT_ADMIN.contains(action))      needsAdmin = true;
+                else if (CHAT_LOGIN.contains(action)) needsLogin = true;
                 break;
         }
 

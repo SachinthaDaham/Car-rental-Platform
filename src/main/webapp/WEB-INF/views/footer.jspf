@@ -1,4 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.vrp.model.User" %>
+<%
+    User footerUser = (User) session.getAttribute("loggedInUser");
+    String footerCtx = request.getContextPath();
+%>
 </main>
 
 <footer class="mt-20 bg-ink-900 text-slate-300">
@@ -37,8 +42,8 @@
       <h4 class="text-white font-bold mb-3 text-sm uppercase tracking-wider">Admin</h4>
       <ul class="space-y-2.5 text-sm">
         <li><a class="hover:text-brand-400 transition flex items-center gap-2" href="${pageContext.request.contextPath}/vehicles?action=dashboard"><i class="bi bi-speedometer2 text-slate-500"></i> Dashboard</a></li>
-        <li><a class="hover:text-brand-400 transition flex items-center gap-2" href="${pageContext.request.contextPath}/vehicles?action=list"><i class="bi bi-table text-slate-500"></i> Manage Fleet</a></li>
-        <li><a class="hover:text-brand-400 transition flex items-center gap-2" href="${pageContext.request.contextPath}/vehicles?action=add"><i class="bi bi-plus-lg text-slate-500"></i> Add Vehicle</a></li>
+        <li><a class="hover:text-brand-400 transition flex items-center gap-2" href="${pageContext.request.contextPath}/booking?action=adminList"><i class="bi bi-calendar-check text-slate-500"></i> Manage Bookings</a></li>
+        <li><a class="hover:text-brand-400 transition flex items-center gap-2" href="${pageContext.request.contextPath}/chat?action=admin"><i class="bi bi-chat-dots text-slate-500"></i> Live Chat</a></li>
         <li><a class="hover:text-brand-400 transition flex items-center gap-2" href="${pageContext.request.contextPath}/auth?action=users"><i class="bi bi-people text-slate-500"></i> User Management</a></li>
       </ul>
     </div>
@@ -69,6 +74,246 @@
     </div>
   </div>
 </footer>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOATING LIVE CHAT WIDGET (customers only)
+     ═══════════════════════════════════════════════════════════════ -->
+<% if (footerUser != null && !footerUser.isAdmin()) { %>
+<style>
+#chatWidget { font-family: 'Inter', sans-serif; }
+#chatPanel {
+  transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .35s;
+  transform: translateY(20px) scale(.97); opacity:0; pointer-events:none;
+}
+#chatPanel.open { transform: translateY(0) scale(1); opacity:1; pointer-events:auto; }
+#chatMsgs { scroll-behavior:smooth; }
+.cmsg { animation: cmsgIn .2s ease both; }
+@keyframes cmsgIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<div id="chatWidget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+
+  <!-- Panel -->
+  <div id="chatPanel" class="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden" style="height:480px;">
+
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-brand-600 to-brand-700 px-4 py-3 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+        <i class="bi bi-headset text-white"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-white font-bold text-sm">DriveLanka Support</p>
+        <p class="text-brand-200 text-xs flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+          Online · Typically replies quickly
+        </p>
+      </div>
+      <button onclick="toggleChat()" class="text-white/70 hover:text-white transition">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Messages -->
+    <div id="chatMsgs" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Input -->
+    <div class="p-3 border-t border-slate-100 bg-white">
+      <div class="flex gap-2">
+        <input id="chatInput" type="text" placeholder="Type a message…" maxlength="500"
+               class="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500">
+        <button id="chatSendBtn" onclick="widgetSend()"
+                class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl transition">
+          <i class="bi bi-send-fill text-sm"></i>
+        </button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-1.5 text-center">Press Enter to send · Admin will reply shortly</p>
+    </div>
+  </div>
+
+  <!-- FAB button -->
+  <button id="chatFab" onclick="toggleChat()"
+          class="relative w-14 h-14 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800 text-white shadow-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95">
+    <i id="chatFabIcon" class="bi bi-chat-dots-fill text-xl"></i>
+    <span id="chatUnreadDot" class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white"></span>
+  </button>
+</div>
+
+<script>
+(function() {
+  var CTX          = '<%= footerCtx %>';
+  var isOpen       = false;
+  var lastTs       = '';
+  var pollTimer    = null;
+  var loaded       = false;
+
+  window.toggleChat = function() {
+    isOpen = !isOpen;
+    var panel = document.getElementById('chatPanel');
+    var icon  = document.getElementById('chatFabIcon');
+    panel.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'bi bi-x-lg text-xl' : 'bi bi-chat-dots-fill text-xl';
+    if (isOpen && !loaded) { loadHistory(); loaded = true; }
+    if (isOpen) { clearUnread(); startPoll(); setTimeout(function(){ document.getElementById('chatInput').focus(); },300); }
+    else { stopPoll(); }
+  };
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function appendMsg(role, content, shortTime) {
+    var isAdmin = role === 'ADMIN';
+    var wrap = document.createElement('div');
+    wrap.className = 'flex cmsg ' + (isAdmin ? 'justify-start' : 'justify-end');
+    wrap.innerHTML =
+      '<div class="max-w-[80%] ' +
+        (isAdmin
+          ? 'bg-white border border-slate-200 text-ink-900 rounded-2xl rounded-tl-sm'
+          : 'bg-brand-600 text-white rounded-2xl rounded-tr-sm') +
+        ' px-3.5 py-2.5 shadow-sm">' +
+        '<p class="text-sm leading-relaxed">' + escHtml(content) + '</p>' +
+        '<p class="text-[10px] mt-1 ' + (isAdmin ? 'text-slate-400' : 'text-brand-200') + ' text-right">' + shortTime + '</p>' +
+      '</div>';
+    var msgs = document.getElementById('chatMsgs');
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    var el = document.getElementById('chatMsgs');
+    var d  = document.createElement('div');
+    d.id   = 'typingIndicator';
+    d.className = 'flex justify-start cmsg';
+    d.innerHTML = '<div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex gap-1.5 items-center">' +
+      '<span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay:0s"></span>' +
+      '<span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay:.15s"></span>' +
+      '<span class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay:.3s"></span>' +
+    '</div>';
+    el.appendChild(d);
+    el.scrollTop = el.scrollHeight;
+    setTimeout(function(){ var t=document.getElementById('typingIndicator'); if(t)t.remove(); }, 1500);
+  }
+
+  function loadHistory() {
+    var msgs = document.getElementById('chatMsgs');
+    msgs.innerHTML = '<div class="text-center text-slate-400 text-xs py-4">Loading…</div>';
+    fetch(CTX + '/chat?action=history')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        msgs.innerHTML = '';
+        if (!data.length) {
+          msgs.innerHTML =
+            '<div class="text-center py-6">' +
+              '<div class="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3"><i class="bi bi-chat-heart text-brand-500 text-xl"></i></div>' +
+              '<p class="text-slate-600 font-semibold text-sm">Hi, <%= footerUser.getName().split(" ")[0] %>!</p>' +
+              '<p class="text-slate-400 text-xs mt-1">How can we help you today? Send us a message!</p>' +
+            '</div>';
+        }
+        data.forEach(function(m){ appendMsg(m.role, m.content, m.shortTime); });
+        if (data.length) lastTs = data[data.length-1].timestamp;
+      })
+      .catch(function(){ msgs.innerHTML = '<p class="text-center text-slate-400 text-xs">Could not load messages.</p>'; });
+  }
+
+  function startPoll() {
+    stopPoll();
+    pollTimer = setInterval(function() {
+      if (!isOpen || !lastTs) return;
+      fetch(CTX + '/chat?action=poll&since=' + encodeURIComponent(lastTs))
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          data.forEach(function(m){
+            if (m.role === 'ADMIN') { showTyping(); setTimeout(function(){ appendMsg(m.role, m.content, m.shortTime); }, 600); }
+            else { appendMsg(m.role, m.content, m.shortTime); }
+            lastTs = m.timestamp;
+          });
+        });
+    }, 3000);
+  }
+
+  function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+  function clearUnread() {
+    document.getElementById('chatUnreadDot').classList.add('hidden');
+  }
+
+  // Poll unread count when panel is closed
+  setInterval(function() {
+    if (isOpen) return;
+    fetch(CTX + '/chat?action=unread')
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var dot = document.getElementById('chatUnreadDot');
+        if (d.count > 0) { dot.textContent = d.count; dot.classList.remove('hidden'); }
+        else { dot.classList.add('hidden'); }
+      })
+      .catch(function(){});
+  }, 10000);
+
+  window.widgetSend = function() {
+    var input = document.getElementById('chatInput');
+    var content = input.value.trim();
+    if (!content) return;
+    input.value = '';
+    input.disabled = true;
+
+    // Optimistic render
+    var now = new Date();
+    var shortTime = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    appendMsg('CUSTOMER', content, shortTime);
+
+    var fd = new FormData();
+    fd.append('content', content);
+    fetch(CTX + '/chat', { method:'POST', body:fd })
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        if (d.success) lastTs = d.timestamp;
+        input.disabled = false;
+        input.focus();
+      })
+      .catch(function(){ input.disabled = false; });
+  };
+
+  document.getElementById('chatInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.widgetSend(); }
+  });
+
+  // Poll admin badge in header
+  setInterval(function(){
+    fetch(CTX + '/chat?action=unread')
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var b = document.getElementById('adminChatBadge');
+        if (!b) return;
+        if (d.count > 0) { b.textContent = d.count; b.classList.remove('hidden'); }
+        else b.classList.add('hidden');
+      }).catch(function(){});
+  }, 15000);
+})();
+</script>
+<% } %>
+
+<!-- Admin: poll unread chat count for nav badge -->
+<% if (footerUser != null && footerUser.isAdmin()) { %>
+<script>
+(function() {
+  function pollAdminUnread() {
+    fetch('<%= footerCtx %>/chat?action=unread')
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var b = document.getElementById('adminChatBadge');
+        if (!b) return;
+        if (d.count > 0) { b.textContent = d.count; b.classList.remove('hidden'); }
+        else b.classList.add('hidden');
+      }).catch(function(){});
+  }
+  pollAdminUnread();
+  setInterval(pollAdminUnread, 15000);
+})();
+</script>
+<% } %>
 
 </body>
 </html>

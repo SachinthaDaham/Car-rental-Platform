@@ -104,11 +104,19 @@
                     <i class="bi bi-eye"></i> View Vehicle
                   </a>
                   <% if (b.isPending()) { %>
+                    <a href="${pageContext.request.contextPath}/payment?action=form&bookingId=<%= b.getBookingId() %>"
+                       class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-4 py-1.5 rounded-lg transition shadow-sm">
+                      <i class="bi bi-credit-card-fill"></i> Pay Now
+                    </a>
                     <a href="${pageContext.request.contextPath}/booking?action=cancel&id=<%= b.getBookingId() %>"
                        onclick="return confirm('Cancel booking <%= b.getBookingId() %>?');"
                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:text-rose-700 border border-rose-200 hover:border-rose-400 px-3 py-1.5 rounded-lg transition">
-                      <i class="bi bi-x-circle"></i> Cancel Booking
+                      <i class="bi bi-x-circle"></i> Cancel
                     </a>
+                  <% } else if (b.isConfirmed()) { %>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg bg-emerald-50">
+                      <i class="bi bi-shield-check-fill"></i> Paid & Confirmed
+                    </span>
                   <% } %>
                 </div>
               </div>

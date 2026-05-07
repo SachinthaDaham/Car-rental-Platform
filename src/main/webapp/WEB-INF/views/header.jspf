@@ -57,6 +57,10 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
         <a href="<%= ctx %>/vehicles?action=dashboard" class="hover:text-brand-600 transition <%= "dashboard".equals(current)?"text-brand-600 font-semibold":"" %>">Dashboard</a>
         <a href="<%= ctx %>/vehicles?action=list"      class="hover:text-brand-600 transition <%= "list".equals(current)?"text-brand-600 font-semibold":"" %>">Fleet</a>
         <a href="<%= ctx %>/booking?action=adminList"  class="hover:text-brand-600 transition <%= "bookings".equals(current)?"text-brand-600 font-semibold":"" %>">Bookings</a>
+        <a href="<%= ctx %>/chat?action=admin" class="relative hover:text-brand-600 transition <%= "chat".equals(current)?"text-brand-600 font-semibold":"" %>">
+          Live Chat
+          <span id="adminChatBadge" class="hidden absolute -top-1.5 -right-2.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center"></span>
+        </a>
       <% } else if (sessionUser != null) { %>
         <a href="<%= ctx %>/auth?action=dashboard" class="hover:text-brand-600 transition">My Account</a>
         <a href="<%= ctx %>/booking?action=my"     class="hover:text-brand-600 transition <%= "myBookings".equals(current)?"text-brand-600 font-semibold":"" %>">My Bookings</a>
@@ -100,6 +104,7 @@ com.vrp.model.User sessionUser = (com.vrp.model.User) session.getAttribute("logg
         <a href="<%= ctx %>/vehicles?action=dashboard" class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a href="<%= ctx %>/vehicles?action=list"      class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-table"></i> Fleet</a>
         <a href="<%= ctx %>/booking?action=adminList"  class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-calendar-check"></i> Bookings</a>
+        <a href="<%= ctx %>/chat?action=admin"         class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-chat-dots-fill text-brand-500"></i> Live Chat</a>
         <a href="<%= ctx %>/vehicles?action=add"       class="px-3 py-2.5 rounded-lg bg-brand-600 text-white flex items-center gap-2 mt-1"><i class="bi bi-plus-lg"></i> Add Vehicle</a>
       <% } else if (sessionUser != null) { %>
         <a href="<%= ctx %>/auth?action=dashboard" class="px-3 py-2.5 rounded-lg hover:bg-slate-50 text-slate-700 flex items-center gap-2"><i class="bi bi-person"></i> My Account</a>

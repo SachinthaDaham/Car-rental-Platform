@@ -1,5 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List, java.util.Map, com.vrp.model.Booking" %>
+<%@ page import="java.util.List, java.util.Map, com.vrp.model.Booking, com.vrp.dao.PaymentDAO, com.vrp.model.Payment" %>
+<%
+    String vrpBase = System.getProperty("user.home") + "/vrp_data/";
+    PaymentDAO lbPayDAO = new PaymentDAO(vrpBase + "payments.txt");
+%>
 <%
     request.setAttribute("nav", "bookings");
     request.setAttribute("pageTitle", "Manage Bookings — DriveLanka Admin");
@@ -105,6 +109,7 @@
                 <th class="px-5 py-4 font-semibold hidden lg:table-cell">Dates</th>
                 <th class="px-5 py-4 font-semibold">Total</th>
                 <th class="px-5 py-4 font-semibold text-center">Status</th>
+                <th class="px-5 py-4 font-semibold text-center hidden lg:table-cell">Payment</th>
                 <th class="px-5 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
@@ -137,6 +142,21 @@
                     <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full <%= b.getStatusColor() %>">
                       <%= b.getStatusLabel() %>
                     </span>
+                  </td>
+                  <td class="px-5 py-4 text-center hidden lg:table-cell">
+                    <%
+                      Payment lbPay = null;
+                      try { lbPay = lbPayDAO.getByBookingId(b.getBookingId()); } catch(Exception ignored){}
+                    %>
+                    <% if (lbPay != null) { %>
+                      <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                        <i class="bi bi-check-circle-fill"></i> Paid
+                      </span>
+                    <% } else { %>
+                      <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 text-slate-500">
+                        Unpaid
+                      </span>
+                    <% } %>
                   </td>
                   <td class="px-5 py-4 text-right">
                     <div class="flex items-center justify-end gap-1">
