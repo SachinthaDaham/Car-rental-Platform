@@ -147,10 +147,16 @@ public class BookingDAO {
         return m;
     }
 
-    /** Generates the next booking ID: BK0001, BK0002, … */
+    /** Generates the next booking ID: BK0001, BK0002, … — safe even after deletions. */
     public synchronized String nextBookingId() throws IOException {
-        int count = getAllBookings().size() + 1;
-        return String.format("BK%04d", count);
+        int max = 0;
+        for (Booking b : getAllBookings()) {
+            String id = b.getBookingId();
+            if (id != null && id.startsWith("BK")) {
+                try { max = Math.max(max, Integer.parseInt(id.substring(2))); } catch (NumberFormatException ignored) {}
+            }
+        }
+        return String.format("BK%04d", max + 1);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

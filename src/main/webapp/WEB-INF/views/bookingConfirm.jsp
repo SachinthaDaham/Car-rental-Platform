@@ -116,6 +116,16 @@
             <i class="bi bi-search"></i> Browse More
           </a>
         </div>
+
+        <!-- Cancel option -->
+        <div class="border-t border-slate-100 pt-4">
+          <p class="text-xs text-slate-400 text-center mb-2">Changed your mind?</p>
+          <a href="${pageContext.request.contextPath}/booking?action=cancel&id=<%= b.getBookingId() %>"
+             onclick="return confirm('Cancel booking <%= b.getBookingId() %>? This cannot be undone.');"
+             class="w-full flex items-center justify-center gap-2 text-sm font-semibold text-rose-500 hover:text-rose-700 border border-rose-200 hover:border-rose-400 hover:bg-rose-50 py-2.5 rounded-xl transition">
+            <i class="bi bi-x-circle"></i> Cancel This Booking
+          </a>
+        </div>
       </div>
     </div>
 

@@ -15,6 +15,7 @@
     long cancelled = bookings == null ? 0 : bookings.stream().filter(Booking::isCancelled).count();
     long completed = bookings == null ? 0 : bookings.stream().filter(Booking::isCompleted).count();
     String msg     = request.getParameter("msg");
+    String cancelError = request.getParameter("error");
 %>
 <%@ include file="header.jspf" %>
 
@@ -60,6 +61,10 @@
     <% if ("cancelled".equals(msg)) { %>
       <div class="mb-5 flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl shadow-sm font-medium text-sm">
         <i class="bi bi-x-circle-fill text-rose-400"></i> Booking cancelled successfully.
+      </div>
+    <% } else if (cancelError != null && !cancelError.isEmpty()) { %>
+      <div class="mb-5 flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl shadow-sm font-medium text-sm">
+        <i class="bi bi-exclamation-circle-fill text-rose-500"></i> <%= cancelError %>
       </div>
     <% } %>
 
@@ -165,7 +170,7 @@
                       <i class="bi bi-credit-card-fill"></i> Pay Now
                     </a>
                     <a href="${pageContext.request.contextPath}/booking?action=cancel&id=<%= b.getBookingId() %>"
-                       onclick="return confirm('Are you sure you want to cancel booking <%= b.getBookingId() %>?');"
+                       onclick="return confirm('Cancel booking <%= b.getBookingId() %>? This cannot be undone.');"
                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-500 hover:text-rose-700 border border-rose-200 hover:border-rose-400 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition">
                       <i class="bi bi-x-circle"></i> Cancel
                     </a>
@@ -173,6 +178,11 @@
                     <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg bg-emerald-50">
                       <i class="bi bi-shield-check-fill"></i> Paid & Confirmed
                     </span>
+                    <a href="${pageContext.request.contextPath}/booking?action=cancel&id=<%= b.getBookingId() %>"
+                       onclick="return confirm('Cancel confirmed booking <%= b.getBookingId() %>?\n\nNote: Refunds are subject to our cancellation policy. This cannot be undone.');"
+                       class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-400 hover:text-rose-700 border border-rose-200 hover:border-rose-400 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition">
+                      <i class="bi bi-x-circle"></i> Cancel
+                    </a>
                   <% } else if (b.isCompleted()) { %>
                     <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 border border-brand-200 px-3 py-1.5 rounded-lg bg-brand-50">
                       <i class="bi bi-flag-fill"></i> Rental Completed

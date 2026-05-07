@@ -40,22 +40,27 @@
     </div>
 
     <!-- Stats strip -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center lg:col-span-2">
-        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Total Revenue</p>
-        <p class="text-2xl font-extrabold text-brand-700">LKR <%= String.format("%,.0f", revenue) %></p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div class="bg-gradient-to-br from-brand-600 to-brand-800 rounded-2xl shadow-sm p-4 text-center lg:col-span-2">
+        <p class="text-xs text-brand-200 font-semibold uppercase tracking-wide mb-1">Total Revenue</p>
+        <p class="text-2xl font-extrabold text-white">LKR <%= String.format("%,.0f", revenue) %></p>
+        <p class="text-[11px] text-brand-200 mt-1">All non-cancelled bookings</p>
       </div>
       <div class="bg-amber-50 rounded-2xl border border-amber-100 shadow-sm p-4 text-center">
         <p class="text-2xl font-extrabold text-amber-600"><%= pending %></p>
-        <p class="text-xs text-amber-600 font-semibold mt-1">Pending</p>
+        <p class="text-xs text-amber-600 font-semibold mt-1 uppercase tracking-wide">Pending</p>
       </div>
       <div class="bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm p-4 text-center">
         <p class="text-2xl font-extrabold text-emerald-600"><%= confirmed %></p>
-        <p class="text-xs text-emerald-600 font-semibold mt-1">Confirmed</p>
+        <p class="text-xs text-emerald-600 font-semibold mt-1 uppercase tracking-wide">Confirmed</p>
+      </div>
+      <div class="bg-rose-50 rounded-2xl border border-rose-100 shadow-sm p-4 text-center">
+        <p class="text-2xl font-extrabold text-rose-500"><%= cancelled %></p>
+        <p class="text-xs text-rose-500 font-semibold mt-1 uppercase tracking-wide">Cancelled</p>
       </div>
       <div class="bg-brand-50 rounded-2xl border border-brand-100 shadow-sm p-4 text-center">
         <p class="text-2xl font-extrabold text-brand-600"><%= completed %></p>
-        <p class="text-xs text-brand-600 font-semibold mt-1">Completed</p>
+        <p class="text-xs text-brand-600 font-semibold mt-1 uppercase tracking-wide">Completed</p>
       </div>
     </div>
 
@@ -159,28 +164,41 @@
                     <% } %>
                   </td>
                   <td class="px-5 py-4 text-right">
-                    <div class="flex items-center justify-end gap-1">
+                    <div class="flex items-center justify-end gap-1 flex-wrap">
                       <% if (b.isPending()) { %>
                         <a href="${pageContext.request.contextPath}/booking?action=updateStatus&id=<%= b.getBookingId() %>&status=CONFIRMED"
-                           onclick="return confirm('Confirm booking <%= b.getBookingId() %>?');"
-                           class="inline-flex items-center gap-1 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-2.5 py-1.5 rounded-lg transition" title="Confirm">
+                           onclick="return confirm('Confirm booking <%= b.getBookingId() %>? This will mark it as paid and confirmed.');"
+                           class="inline-flex items-center gap-1 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-2.5 py-1.5 rounded-lg transition" title="Confirm Booking">
                           <i class="bi bi-check-lg"></i> Confirm
                         </a>
                         <a href="${pageContext.request.contextPath}/booking?action=updateStatus&id=<%= b.getBookingId() %>&status=CANCELLED"
                            onclick="return confirm('Cancel booking <%= b.getBookingId() %>?');"
-                           class="inline-flex items-center gap-1 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 px-2.5 py-1.5 rounded-lg transition" title="Cancel">
-                          <i class="bi bi-x-lg"></i>
+                           class="inline-flex items-center gap-1 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 px-2.5 py-1.5 rounded-lg transition" title="Cancel Booking">
+                          <i class="bi bi-x-lg"></i> Cancel
                         </a>
                       <% } else if (b.isConfirmed()) { %>
                         <a href="${pageContext.request.contextPath}/booking?action=updateStatus&id=<%= b.getBookingId() %>&status=COMPLETED"
-                           onclick="return confirm('Mark as completed?');"
-                           class="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 px-2.5 py-1.5 rounded-lg transition">
+                           onclick="return confirm('Mark booking <%= b.getBookingId() %> as completed?');"
+                           class="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 px-2.5 py-1.5 rounded-lg transition" title="Mark Completed">
                           <i class="bi bi-flag-fill"></i> Complete
                         </a>
+                        <a href="${pageContext.request.contextPath}/booking?action=updateStatus&id=<%= b.getBookingId() %>&status=CANCELLED"
+                           onclick="return confirm('Cancel confirmed booking <%= b.getBookingId() %>? Customer has already paid — handle refund separately.');"
+                           class="inline-flex items-center gap-1 text-xs font-bold text-rose-600 border border-rose-200 hover:bg-rose-500 hover:text-white px-2.5 py-1.5 rounded-lg transition" title="Cancel Booking">
+                          <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                      <% } else if (b.isCancelled()) { %>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 italic px-2 py-1">
+                          <i class="bi bi-x-circle"></i> Cancelled
+                        </span>
+                      <% } else if (b.isCompleted()) { %>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-400 italic px-2 py-1">
+                          <i class="bi bi-flag-fill"></i> Completed
+                        </span>
                       <% } %>
                       <a href="${pageContext.request.contextPath}/booking?action=delete&id=<%= b.getBookingId() %>"
-                         onclick="return confirm('Permanently delete booking <%= b.getBookingId() %>?');"
-                         class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition" title="Delete">
+                         onclick="return confirm('Permanently delete booking <%= b.getBookingId() %>? This cannot be undone.');"
+                         class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-700 transition" title="Delete Permanently">
                         <i class="bi bi-trash3 text-xs"></i>
                       </a>
                     </div>
@@ -226,9 +244,12 @@
 
   btns.forEach(function(btn) {
     btn.addEventListener('click', function() {
-      btns.forEach(function(b) { b.classList.remove('active','bg-brand-600','text-white','border-brand-300'); b.classList.add('bg-white'); });
+      btns.forEach(function(b) {
+        b.classList.remove('active','bg-brand-600','text-white','border-brand-300');
+        b.classList.add('bg-white');
+      });
       this.classList.add('active','bg-brand-600','text-white','border-brand-300');
-      this.classList.remove('bg-white');
+      this.classList.remove('bg-white','text-amber-600','text-emerald-600','text-rose-500','text-brand-600');
       activeStatus = this.dataset.status;
       filter();
     });

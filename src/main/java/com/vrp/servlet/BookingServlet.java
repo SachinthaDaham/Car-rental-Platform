@@ -100,14 +100,22 @@ public class BookingServlet extends HttpServlet {
                 }
 
                 case "updateStatus": {
+                    User adminUser = sessionUser(req);
+                    if (adminUser == null || !adminUser.isAdmin()) {
+                        resp.sendRedirect(req.getContextPath() + "/auth?action=login");
+                        return;
+                    }
                     String bid    = req.getParameter("id");
                     String status = req.getParameter("status");
-                    if (bid != null && status != null) {
-                        bookingDAO.updateStatus(bid, status.toUpperCase());
-                        // On cancel/complete, ensure vehicle is re-enabled
-                        // (undoes any legacy available=false set by old booking logic)
+                    String[] allowed = {"CONFIRMED", "CANCELLED", "COMPLETED"};
+                    boolean validStatus = false;
+                    if (status != null) {
+                        for (String s : allowed) if (s.equalsIgnoreCase(status)) { validStatus = true; break; }
+                    }
+                    if (bid != null && validStatus) {
                         Booking b = bookingDAO.getBookingById(bid);
-                        if (b != null) {
+                        if (b != null && !b.isCompleted()) {
+                            bookingDAO.updateStatus(bid, status.toUpperCase());
                             if ("CANCELLED".equalsIgnoreCase(status) || "COMPLETED".equalsIgnoreCase(status)) {
                                 Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
                                 if (v2 != null && !v2.isAvailable()) {
@@ -122,14 +130,23 @@ public class BookingServlet extends HttpServlet {
                 }
 
                 case "cancel": {
-                    // Customer cancels their own booking
+                    // Customer cancels their own PENDING or CONFIRMED booking
                     User u = sessionUser(req);
                     String bid = req.getParameter("id");
+                    String cancelError = null;
                     if (u != null && bid != null) {
                         Booking b = bookingDAO.getBookingById(bid);
-                        if (b != null && b.getCustomerUsername().equalsIgnoreCase(u.getUsername()) && b.isPending()) {
+                        if (b == null) {
+                            cancelError = "Booking not found.";
+                        } else if (!b.getCustomerUsername().equalsIgnoreCase(u.getUsername())) {
+                            cancelError = "You can only cancel your own bookings.";
+                        } else if (b.isCancelled()) {
+                            cancelError = "This booking is already cancelled.";
+                        } else if (b.isCompleted()) {
+                            cancelError = "Completed bookings cannot be cancelled.";
+                        } else {
+                            // Allow cancel for PENDING or CONFIRMED
                             bookingDAO.updateStatus(bid, "CANCELLED");
-                            // Re-enable vehicle if it was set unavailable by legacy logic
                             Vehicle v2 = vehicleDAO.getVehicleById(b.getVehicleId());
                             if (v2 != null && !v2.isAvailable()) {
                                 v2.setAvailable(true);
@@ -137,12 +154,20 @@ public class BookingServlet extends HttpServlet {
                             }
                         }
                     }
-                    resp.sendRedirect(req.getContextPath() + "/booking?action=my&msg=cancelled");
+                    if (cancelError != null) {
+                        resp.sendRedirect(req.getContextPath() + "/booking?action=my&error=" + java.net.URLEncoder.encode(cancelError, "UTF-8"));
+                    } else {
+                        resp.sendRedirect(req.getContextPath() + "/booking?action=my&msg=cancelled");
+                    }
                     return;
                 }
 
                 case "delete": {
-                    // Admin only
+                    User adminUser = sessionUser(req);
+                    if (adminUser == null || !adminUser.isAdmin()) {
+                        resp.sendRedirect(req.getContextPath() + "/auth?action=login");
+                        return;
+                    }
                     String bid = req.getParameter("id");
                     if (bid != null) bookingDAO.deleteBooking(bid);
                     resp.sendRedirect(req.getContextPath() + "/booking?action=adminList&msg=deleted");
