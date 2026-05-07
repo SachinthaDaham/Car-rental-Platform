@@ -32,7 +32,7 @@ public class AuthFilter implements Filter {
     private static final Set<String> BOOKING_LOGIN = Set.of(
         "form", "create", "my", "confirm", "cancel"
     );
-    private static final Set<String> CHAT_ADMIN = Set.of("admin");
+    private static final Set<String> CHAT_ADMIN = Set.of("admin", "conversations");
     private static final Set<String> CHAT_LOGIN = Set.of("history", "poll", "unread", "send");
     private static final Set<String> PAYMENT_LOGIN = Set.of("form", "create", "success");
 
