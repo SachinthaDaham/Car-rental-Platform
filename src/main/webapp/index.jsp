@@ -18,15 +18,14 @@
   <div class="absolute inset-0 bg-gradient-to-br from-brand-900 via-ink-900 to-brand-700"></div>
   <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle at 20% 20%, #38bdf8 0, transparent 40%), radial-gradient(circle at 80% 60%, #6366f1 0, transparent 45%);"></div>
   <div class="relative max-w-7xl mx-auto px-6 py-24 md:py-32 text-white">
-    <span class="inline-flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-medium mb-6">
-      <i class="bi bi-stars"></i> Sri Lanka's #1 OOP-powered rental demo
+    <span class="inline-flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold mb-6">
+      <i class="bi bi-geo-alt-fill text-brand-300"></i> Island-wide delivery · Colombo · Kandy · Galle
     </span>
     <h1 class="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight max-w-3xl">
       Drive Anywhere. <span class="bg-gradient-to-r from-sky-300 to-cyan-200 bg-clip-text text-transparent">Anytime.</span>
     </h1>
     <p class="mt-5 text-lg text-slate-200 max-w-2xl">
-      Rent cars, bikes and vans from a curated, modern fleet — managed end-to-end by the
-      <strong>Vehicle Management</strong> module of the DriveLanka platform.
+      Sri Lanka's most convenient vehicle rental platform. Choose from Cars, Bikes and Vans — book in minutes, pay securely, and hit the road.
     </p>
     <div class="mt-8 flex flex-wrap gap-3">
       <a href="${pageContext.request.contextPath}/vehicles?action=browse" class="bg-white text-brand-700 hover:bg-brand-50 font-semibold px-6 py-3 rounded-xl shadow-lg inline-flex items-center gap-2">
@@ -114,7 +113,7 @@
           <% if (v.isAvailable()) { %>
             <span class="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full">Available</span>
           <% } else { %>
-            <span class="absolute top-3 right-3 bg-rose-500 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full">Rented</span>
+            <span class="absolute top-3 right-3 bg-slate-700/80 text-white text-[10px] font-bold uppercase px-2 py-1 rounded-full">Not Available</span>
           <% } %>
         </div>
         <div class="p-5">
@@ -158,6 +157,65 @@
         <p class="text-slate-500 mt-2"><%= f[2] %></p>
       </div>
     <% } %>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="max-w-7xl mx-auto px-6 mt-24">
+  <div class="text-center mb-12">
+    <span class="inline-block text-xs font-bold uppercase tracking-widest text-brand-600 mb-3">Simple Process</span>
+    <h2 class="text-3xl font-extrabold tracking-tight">How It Works</h2>
+    <p class="text-slate-500 mt-2 max-w-xl mx-auto">Get on the road in three easy steps — no paperwork, no hassle.</p>
+  </div>
+  <div class="grid md:grid-cols-3 gap-8 relative">
+    <!-- connector line desktop -->
+    <div class="hidden md:block absolute top-10 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-brand-200 to-brand-200" style="z-index:0"></div>
+    <%
+      String[][] steps = {
+        {"1","bi-search","Browse & Choose","Filter by type, location and price. Find the perfect vehicle for your trip.","brand"},
+        {"2","bi-calendar-check-fill","Book Your Dates","Select your rental period. The system checks availability in real-time.","indigo"},
+        {"3","bi-credit-card-fill","Pay & Drive","Complete secure payment and receive instant confirmation. You're ready!","emerald"}
+      };
+      for (String[] s : steps) {
+    %>
+      <div class="relative text-center bg-white rounded-2xl p-7 shadow-card border border-slate-100" style="z-index:1">
+        <div class="w-16 h-16 rounded-2xl bg-<%= s[4] %>-50 flex items-center justify-center text-<%= s[4] %>-600 text-2xl mx-auto mb-4 shadow-sm border border-<%= s[4] %>-100">
+          <i class="bi <%= s[1] %>"></i>
+        </div>
+        <span class="absolute -top-3 -right-2 w-7 h-7 rounded-full bg-<%= s[4] %>-600 text-white text-xs font-extrabold flex items-center justify-center shadow"><%= s[0] %></span>
+        <h3 class="font-bold text-lg text-ink-900 mb-2"><%= s[2] %></h3>
+        <p class="text-slate-500 text-sm leading-relaxed"><%= s[3] %></p>
+      </div>
+    <% } %>
+  </div>
+  <div class="text-center mt-10">
+    <a href="${pageContext.request.contextPath}/vehicles?action=browse"
+       class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-btn transition">
+      <i class="bi bi-arrow-right-circle-fill"></i> Start Browsing
+    </a>
+  </div>
+</section>
+
+<!-- TESTIMONIALS / TRUST BADGES -->
+<section class="max-w-7xl mx-auto px-6 mt-24">
+  <div class="bg-gradient-to-br from-slate-50 to-brand-50 rounded-3xl border border-slate-100 p-10">
+    <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <%
+        String[][] trust = {
+          {"bi-shield-check-fill","text-emerald-600","Fully Insured","All vehicles covered"},
+          {"bi-clock-fill","text-brand-600","Instant Booking","Confirmed in seconds"},
+          {"bi-headset","text-violet-600","24/7 Support","Live chat + phone"},
+          {"bi-arrow-repeat","text-amber-600","Free Cancellation","Pending bookings"}
+        };
+        for (String[] t : trust) {
+      %>
+        <div class="flex flex-col items-center gap-2">
+          <i class="bi <%= t[0] %> <%= t[1] %> text-3xl"></i>
+          <p class="font-bold text-ink-900 text-sm"><%= t[2] %></p>
+          <p class="text-xs text-slate-400"><%= t[3] %></p>
+        </div>
+      <% } %>
+    </div>
   </div>
 </section>
 

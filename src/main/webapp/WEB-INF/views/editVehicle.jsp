@@ -128,7 +128,12 @@
             </div>
             <div>
               <label class="block text-sm font-semibold text-slate-700 mb-1.5">Image URL</label>
-              <input type="url" name="imageUrl" value="<%= v.getImageUrl() %>" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
+              <input type="url" name="imageUrl" id="editImageUrl" value="<%= v.getImageUrl() %>" placeholder="https://..." class="w-full px-4 py-2.5 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500">
+              <div id="editImgPreviewBox" class="mt-2 <%= (v.getImageUrl() != null && !v.getImageUrl().isEmpty()) ? "" : "hidden" %>">
+                <img id="editImgPreview" src="<%= v.getImageUrl() != null ? v.getImageUrl() : "" %>"
+                     onerror="document.getElementById('editImgPreviewBox').classList.add('hidden')"
+                     alt="Preview" class="w-full max-h-44 object-cover rounded-xl border border-slate-200">
+              </div>
             </div>
           </div>
           <div>
@@ -152,5 +157,21 @@
     </form>
   </div>
 </div>
+
+<script>
+(function() {
+  var urlInput  = document.getElementById('editImageUrl');
+  var previewBox = document.getElementById('editImgPreviewBox');
+  var previewImg = document.getElementById('editImgPreview');
+  if (!urlInput) return;
+  urlInput.addEventListener('input', function() {
+    var url = this.value.trim();
+    if (!url) { previewBox.classList.add('hidden'); return; }
+    previewImg.src = url;
+    previewImg.onload  = function() { previewBox.classList.remove('hidden'); };
+    previewImg.onerror = function() { previewBox.classList.add('hidden'); };
+  });
+})();
+</script>
 
 <%@ include file="footer.jspf" %>

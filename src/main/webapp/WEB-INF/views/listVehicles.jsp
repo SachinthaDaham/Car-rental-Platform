@@ -20,7 +20,7 @@
         <p class="text-slate-500 mt-1">
           <span class="font-semibold text-ink-900"><%= total %></span> vehicle<%= total != 1 ? "s" : "" %> ·
           <span class="text-emerald-600 font-semibold"><%= avail %> available</span> ·
-          <span class="text-rose-500 font-semibold"><%= total - avail %> rented</span>
+          <span class="text-rose-500 font-semibold"><%= total - avail %> blocked</span>
         </p>
       </div>
       <a href="${pageContext.request.contextPath}/vehicles?action=add"
@@ -61,7 +61,7 @@
         <button data-filter="Bike" class="filter-btn px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-brand-300 transition">Bikes</button>
         <button data-filter="Van"  class="filter-btn px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-brand-300 transition">Vans</button>
         <button data-filter="available" class="filter-btn px-3 py-2 text-xs font-bold rounded-lg border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition">Available</button>
-        <button data-filter="rented" class="filter-btn px-3 py-2 text-xs font-bold rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 transition">Rented</button>
+        <button data-filter="rented" class="filter-btn px-3 py-2 text-xs font-bold rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 transition">Blocked</button>
       </div>
     </div>
 
@@ -127,15 +127,15 @@
                   <td class="px-6 py-4 text-center">
                     <% if (v.isAvailable()) { %>
                       <a href="${pageContext.request.contextPath}/vehicles?action=toggle&id=<%= v.getId() %>"
-                         title="Click to mark as Rented"
+                         title="Click to block this vehicle"
                          class="inline-block bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold uppercase px-3 py-1.5 rounded-full transition">
                         <i class="bi bi-check-circle-fill mr-1"></i>Available
                       </a>
                     <% } else { %>
                       <a href="${pageContext.request.contextPath}/vehicles?action=toggle&id=<%= v.getId() %>"
-                         title="Click to mark as Available"
+                         title="Click to make available"
                          class="inline-block bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold uppercase px-3 py-1.5 rounded-full transition">
-                        <i class="bi bi-x-circle-fill mr-1"></i>Rented
+                        <i class="bi bi-slash-circle-fill mr-1"></i>Blocked
                       </a>
                     <% } %>
                   </td>

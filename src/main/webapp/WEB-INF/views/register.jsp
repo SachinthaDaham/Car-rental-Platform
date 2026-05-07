@@ -5,7 +5,7 @@
 %>
 <%@ include file="header.jspf" %>
 
-<div class="bg-slate-50 min-h-screen py-14 flex items-center justify-center px-4">
+<div class="min-h-screen bg-gradient-to-br from-slate-100 via-brand-50 to-slate-100 py-14 flex items-center justify-center px-4">
   <div class="max-w-md w-full">
     <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 md:p-10">
 
@@ -55,8 +55,15 @@
 
         <div>
           <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password <span class="text-rose-500">*</span></label>
-          <input type="password" name="password" id="passwordInput" required placeholder="Min. 6 characters"
-                 class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-sm">
+          <div class="relative">
+            <input type="password" name="password" id="passwordInput" required placeholder="Min. 6 characters"
+                   autocomplete="new-password"
+                   class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-sm">
+            <button type="button" id="togglePass1" tabindex="-1"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1" aria-label="Toggle password">
+              <i id="toggleIcon1" class="bi bi-eye-fill text-base"></i>
+            </button>
+          </div>
           <!-- Strength bar -->
           <div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div id="strengthBar" class="h-full rounded-full transition-all duration-300" style="width:0%"></div>
@@ -66,14 +73,23 @@
 
         <div>
           <label class="block text-sm font-semibold text-slate-700 mb-1.5">Confirm Password <span class="text-rose-500">*</span></label>
-          <input type="password" id="confirmInput" required placeholder="Re-enter password"
-                 class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-sm">
+          <div class="relative">
+            <input type="password" id="confirmInput" required placeholder="Re-enter password"
+                   autocomplete="new-password"
+                   class="w-full px-4 py-3 pr-12 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-sm">
+            <button type="button" id="togglePass2" tabindex="-1"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1" aria-label="Toggle confirm password">
+              <i id="toggleIcon2" class="bi bi-eye-fill text-base"></i>
+            </button>
+          </div>
           <p id="matchMsg" class="text-[11px] mt-1 hidden"></p>
         </div>
 
         <button type="submit" id="submitBtn"
-                class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base py-3 rounded-xl shadow-btn transition mt-1 flex items-center justify-center gap-2">
-          <i class="bi bi-person-check-fill"></i> Create Account
+                class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold text-base py-3.5 rounded-xl shadow-btn transition mt-1 flex items-center justify-center gap-2">
+          <i class="bi bi-person-check-fill" id="submitIcon"></i>
+          <span id="submitText">Create Account</span>
+          <span id="submitSpinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         </button>
       </form>
 
@@ -138,12 +154,34 @@
       e.preventDefault();
       confirmInput.focus();
       checkMatch();
+      return;
     }
     if (p.length < 6) {
       e.preventDefault();
       passInput.focus();
+      return;
     }
+    document.getElementById('submitText').textContent = 'Creating account…';
+    document.getElementById('submitSpinner').classList.remove('hidden');
+    document.getElementById('submitIcon').classList.add('hidden');
+    document.getElementById('submitBtn').disabled = true;
   });
+
+  // Password toggles
+  function makeToggle(btnId, iconId, inputEl) {
+    document.getElementById(btnId).addEventListener('click', function() {
+      var icon = document.getElementById(iconId);
+      if (inputEl.type === 'password') {
+        inputEl.type = 'text';
+        icon.className = 'bi bi-eye-slash-fill text-base';
+      } else {
+        inputEl.type = 'password';
+        icon.className = 'bi bi-eye-fill text-base';
+      }
+    });
+  }
+  makeToggle('togglePass1', 'toggleIcon1', passInput);
+  makeToggle('togglePass2', 'toggleIcon2', confirmInput);
 })();
 </script>
 
