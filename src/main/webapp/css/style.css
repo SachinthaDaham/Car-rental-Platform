@@ -9,7 +9,7 @@ body {
   background: #f8fafc;
   color: #0b1220;
   -webkit-font-smoothing: antialiased;
-}
+} 
 
 /* ── Scroll behaviour ───────────────────────────── */
 html { scroll-behavior: smooth; }
