@@ -75,16 +75,21 @@ pipeline {
                 echo "Copying new WAR to Tomcat..."
                 bat "copy /Y \"${env.WAR_FILE}\" \"${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}.war\""
 
-                echo "Starting Tomcat..."
+                echo "Starting Tomcat via Task Scheduler (escapes Jenkins process tree)..."
                 powershell """
-                    \$env:CATALINA_HOME = '${env.TOMCAT_DIR}'
-                    \$env:JRE_HOME     = 'C:\\Program Files\\Amazon Corretto\\jdk17.0.14_7'
-                    Start-Process -FilePath '${env.TOMCAT_DIR}\\bin\\catalina.bat' `
-                                  -ArgumentList 'start' `
-                                  -WorkingDirectory '${env.TOMCAT_DIR}\\bin' `
-                                  -WindowStyle Hidden
-                    Start-Sleep -Seconds 8
-                    Write-Host 'Tomcat started.'
+                    # Write a standalone start script so schtasks doesn't need env vars inline
+                    \$script = "@echo off`r`nset CATALINA_HOME=${env.TOMCAT_DIR}`r`nset JRE_HOME=C:\\Program Files\\Amazon Corretto\\jdk17.0.14_7`r`ncall `"${env.TOMCAT_DIR}\\bin\\catalina.bat`" start`r`n"
+                    \$script | Out-File -FilePath 'C:\\tomcat_start.bat' -Encoding ascii
+
+                    # Remove any leftover task, ignore errors
+                    schtasks /delete /tn 'StartTomcatVRP' /f 2>\$null | Out-Null
+
+                    # Schedule an immediate one-shot task running as the current user
+                    schtasks /create /f /sc once /st '00:00' /tn 'StartTomcatVRP' /tr 'C:\\tomcat_start.bat'
+                    schtasks /run /tn 'StartTomcatVRP'
+
+                    Start-Sleep -Seconds 10
+                    Write-Host 'Tomcat start task launched.'
                 """
 
                 echo "Deployed! App will be live at http://localhost:8081/${env.APP_NAME}/"
