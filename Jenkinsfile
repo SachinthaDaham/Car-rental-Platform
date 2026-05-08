@@ -78,7 +78,9 @@ pipeline {
                 echo "Starting Tomcat..."
                 bat """
                     set CATALINA_HOME=${env.TOMCAT_DIR}
-                    start "Tomcat" "${env.TOMCAT_DIR}\\bin\\startup.bat"
+                    set JRE_HOME=C:\\Program Files\\Amazon Corretto\\jdk17.0.14_7
+                    call "${env.TOMCAT_DIR}\\bin\\startup.bat"
+                    timeout /t 5 /nobreak
                 """
 
                 echo "Deployed! App will be live at http://localhost:8081/${env.APP_NAME}/"
