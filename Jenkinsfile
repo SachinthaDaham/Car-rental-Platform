@@ -6,8 +6,9 @@ pipeline {
     }
 
     environment {
-        APP_NAME = 'VehicleRentalPlatform'
-        WAR_FILE = "target/${APP_NAME}.war"
+        APP_NAME   = 'VehicleRentalPlatform'
+        WAR_FILE   = "target/${APP_NAME}.war"
+        TOMCAT_DIR = 'C:\\Users\\LENOVO\\Downloads\\apache-tomcat-10.1.24'
     }
 
     stages {
@@ -52,11 +53,36 @@ pipeline {
             }
         }
 
+        stage('Deploy to Tomcat') {
+            steps {
+                echo "Stopping Tomcat..."
+                bat "\"${env.TOMCAT_DIR}\\bin\\shutdown.bat\" || exit 0"
+
+                echo "Removing old deployment..."
+                bat """
+                    if exist "${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}.war" (
+                        del /F /Q "${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}.war"
+                    )
+                    if exist "${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}" (
+                        rmdir /S /Q "${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}"
+                    )
+                """
+
+                echo "Copying new WAR to Tomcat..."
+                bat "copy /Y \"${env.WAR_FILE}\" \"${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}.war\""
+
+                echo "Starting Tomcat..."
+                bat "start \"Tomcat\" \"${env.TOMCAT_DIR}\\bin\\startup.bat\""
+
+                echo "Deployed! App will be live at http://localhost:8080/${env.APP_NAME}/"
+            }
+        }
+
     }
 
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo "Pipeline completed successfully! App live at http://localhost:8080/${env.APP_NAME}/"
         }
         failure {
             echo "Pipeline FAILED. Review the logs above."
