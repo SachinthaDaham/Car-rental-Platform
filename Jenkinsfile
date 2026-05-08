@@ -58,7 +58,7 @@ pipeline {
                 echo "Stopping Tomcat..."
                 bat """
                     set CATALINA_HOME=${env.TOMCAT_DIR}
-                    "${env.TOMCAT_DIR}\\bin\\shutdown.bat" 2>nul
+                    call "${env.TOMCAT_DIR}\\bin\\shutdown.bat" 2>nul
                     exit 0
                 """
 
