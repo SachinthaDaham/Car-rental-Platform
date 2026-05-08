@@ -81,7 +81,7 @@ pipeline {
                     start "Tomcat" "${env.TOMCAT_DIR}\\bin\\startup.bat"
                 """
 
-                echo "Deployed! App will be live at http://localhost:8080/${env.APP_NAME}/"
+                echo "Deployed! App will be live at http://localhost:8081/${env.APP_NAME}/"
             }
         }
 
@@ -89,7 +89,7 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completed! App live at http://localhost:8080/${env.APP_NAME}/"
+            echo "Pipeline completed! App live at http://localhost:8081/${env.APP_NAME}/"
         }
         failure {
             echo "Pipeline FAILED. Review the logs above."
