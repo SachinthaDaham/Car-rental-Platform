@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         APP_NAME = 'VehicleRentalPlatform'
-        WAR_FILE = "target/${APP_NAME}-1.0-SNAPSHOT.war"
+        WAR_FILE = "target/${APP_NAME}.war"
     }
 
     stages {
