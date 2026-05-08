@@ -3,13 +3,11 @@ pipeline {
 
     tools {
         maven 'Maven-3.9'
-        jdk 'JDK-17'
     }
 
     environment {
-        APP_NAME    = 'VehicleRentalPlatform'
-        WAR_FILE    = "target/${APP_NAME}-1.0-SNAPSHOT.war"
-        DEPLOY_DIR  = 'C:/tomcat/webapps'
+        APP_NAME = 'VehicleRentalPlatform'
+        WAR_FILE = "target/${APP_NAME}-1.0-SNAPSHOT.war"
     }
 
     stages {
@@ -51,19 +49,6 @@ pipeline {
                 archiveArtifacts artifacts: "${env.WAR_FILE}",
                                  fingerprint: true,
                                  allowEmptyArchive: false
-            }
-        }
-
-        stage('Deploy to Tomcat') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo "Deploying ${env.APP_NAME} to Tomcat..."
-                bat """
-                    copy /Y "${env.WAR_FILE}" "${env.DEPLOY_DIR}\\${env.APP_NAME}.war"
-                """
-                echo "Deployment complete. App available at http://localhost:8080/${env.APP_NAME}/"
             }
         }
 
