@@ -95,7 +95,7 @@ pipeline {
             echo "Pipeline FAILED. Review the logs above."
         }
         always {
-            cleanWs()
+            cleanWs(notFailBuild: true)
         }
     }
 }
