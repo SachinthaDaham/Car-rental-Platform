@@ -76,11 +76,15 @@ pipeline {
                 bat "copy /Y \"${env.WAR_FILE}\" \"${env.TOMCAT_DIR}\\webapps\\${env.APP_NAME}.war\""
 
                 echo "Starting Tomcat..."
-                bat """
-                    set CATALINA_HOME=${env.TOMCAT_DIR}
-                    set JRE_HOME=C:\\Program Files\\Amazon Corretto\\jdk17.0.14_7
-                    call "${env.TOMCAT_DIR}\\bin\\startup.bat"
-                    timeout /t 5 /nobreak
+                powershell """
+                    \$env:CATALINA_HOME = '${env.TOMCAT_DIR}'
+                    \$env:JRE_HOME     = 'C:\\Program Files\\Amazon Corretto\\jdk17.0.14_7'
+                    Start-Process -FilePath '${env.TOMCAT_DIR}\\bin\\catalina.bat' `
+                                  -ArgumentList 'start' `
+                                  -WorkingDirectory '${env.TOMCAT_DIR}\\bin' `
+                                  -WindowStyle Hidden
+                    Start-Sleep -Seconds 8
+                    Write-Host 'Tomcat started.'
                 """
 
                 echo "Deployed! App will be live at http://localhost:8081/${env.APP_NAME}/"
