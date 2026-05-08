@@ -77,15 +77,17 @@ pipeline {
 
                 echo "Starting Tomcat via Task Scheduler (escapes Jenkins process tree)..."
                 powershell """
-                    # Write a standalone start script so schtasks doesn't need env vars inline
+                    \$startScript = '${env.TOMCAT_DIR}\\bin\\tomcat_start_vrp.bat'
+
+                    # Write a standalone start script next to catalina.bat
                     \$script = "@echo off`r`nset CATALINA_HOME=${env.TOMCAT_DIR}`r`nset JRE_HOME=C:\\Program Files\\Amazon Corretto\\jdk17.0.14_7`r`ncall `"${env.TOMCAT_DIR}\\bin\\catalina.bat`" start`r`n"
-                    \$script | Out-File -FilePath 'C:\\tomcat_start.bat' -Encoding ascii
+                    \$script | Out-File -FilePath \$startScript -Encoding ascii
 
                     # Remove any leftover task, ignore errors
                     schtasks /delete /tn 'StartTomcatVRP' /f 2>\$null | Out-Null
 
                     # Schedule an immediate one-shot task running as the current user
-                    schtasks /create /f /sc once /st '00:00' /tn 'StartTomcatVRP' /tr 'C:\\tomcat_start.bat'
+                    schtasks /create /f /sc once /st '00:00' /tn 'StartTomcatVRP' /tr \$startScript
                     schtasks /run /tn 'StartTomcatVRP'
 
                     Start-Sleep -Seconds 10
