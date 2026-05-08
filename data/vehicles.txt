@@ -1,0 +1,60 @@
+Car|C001|Toyota|Sunny|2017|7345.0|true|Kandy|https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80|A highly reliable Toyota Sunny offering excellent comfort and performance.|5|Manual
+Car|C002|Mercedes|Aqua|2015|11786.0|false|Colombo 03|https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80|A highly reliable Mercedes Aqua offering excellent comfort and performance.|7|Automatic
+Car|C003|Mercedes|C-Class|2017|4217.0|false|Kandy|https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=80|A highly reliable Mercedes C-Class offering excellent comfort and performance.|7|Manual
+Car|C004|Mercedes|Sunny|2021|12803.0|true|Negombo|https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=80|A highly reliable Mercedes Sunny offering excellent comfort and performance.|7|Automatic
+Car|C005|Kia|Rio|2019|11443.0|true|Kandy|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Kia Rio offering excellent comfort and performance.|5|Manual
+Car|C006|Hyundai|Elantra|2024|13405.0|true|Ella|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Hyundai Elantra offering excellent comfort and performance.|4|Manual
+Car|C007|Hyundai|Corolla|2022|10562.0|true|Kandy|https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=80|A highly reliable Hyundai Corolla offering excellent comfort and performance.|7|Automatic
+Car|C008|Mercedes|Fit|2020|7865.0|true|Galle|https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80|A highly reliable Mercedes Fit offering excellent comfort and performance.|4|Manual
+Car|C009|Mercedes|Alto|2015|12779.0|true|Jaffna|https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800&q=80|A highly reliable Mercedes Alto offering excellent comfort and performance.|7|Manual
+Car|C010|Nissan|Civic|2023|12197.0|true|Matara|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Nissan Civic offering excellent comfort and performance.|4|Manual
+Car|C011|Suzuki|Swift|2017|7559.0|true|Jaffna|https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80|A highly reliable Suzuki Swift offering excellent comfort and performance.|5|Automatic
+Car|C012|Nissan|Alto|2018|13241.0|false|Colombo 04|https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800&q=80|A highly reliable Nissan Alto offering excellent comfort and performance.|7|Manual
+Car|C013|Kia|Swift|2021|13792.0|false|Colombo 04|https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80|A highly reliable Kia Swift offering excellent comfort and performance.|7|Automatic
+Car|C014|BMW|Vitz|2015|12992.0|true|Jaffna|https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80|A highly reliable BMW Vitz offering excellent comfort and performance.|5|Manual
+Car|C015|Honda|Rio|2020|12997.0|false|Matara|https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80|A highly reliable Honda Rio offering excellent comfort and performance.|7|Manual
+Car|C016|Kia|Vitz|2020|4973.0|true|Negombo|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Kia Vitz offering excellent comfort and performance.|7|Automatic
+Car|C017|Hyundai|Alto|2016|13960.0|true|Colombo 04|https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80|A highly reliable Hyundai Alto offering excellent comfort and performance.|4|Automatic
+Car|C018|Mercedes|Corolla|2015|8711.0|true|Ella|https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80|A highly reliable Mercedes Corolla offering excellent comfort and performance.|5|Manual
+Car|C019|Suzuki|C-Class|2019|7621.0|true|Matara|https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=80|A highly reliable Suzuki C-Class offering excellent comfort and performance.|4|Manual
+Car|C020|Hyundai|Elantra|2016|6040.0|true|Matara|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Hyundai Elantra offering excellent comfort and performance.|5|Automatic
+Car|C021|Toyota|Civic|2016|10307.0|true|Colombo 01|https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800&q=80|A highly reliable Toyota Civic offering excellent comfort and performance.|5|Manual
+Car|C022|Mercedes|Civic|2020|14260.0|true|Negombo|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Mercedes Civic offering excellent comfort and performance.|4|Manual
+Car|C023|Toyota|Alto|2020|12646.0|true|Colombo 01|https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80|A highly reliable Toyota Alto offering excellent comfort and performance.|7|Automatic
+Car|C024|Honda|Alto|2019|11487.0|true|Ella|https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=80|A highly reliable Honda Alto offering excellent comfort and performance.|5|Manual
+Car|C025|BMW|Vitz|2023|9568.0|true|Colombo 04|https://images.unsplash.com/photo-1550355291-bbee04a92027?w=800&q=80|A highly reliable BMW Vitz offering excellent comfort and performance.|4|Manual
+Bike|B001|Hero|Classic 350|2021|3874.0|true|Colombo 01|https://images.unsplash.com/photo-1558981001-1995369a39cd?w=800&q=80|Experience the thrill of the open road with this agile Hero Classic 350.|125|Cruiser
+Bike|B002|Bajaj|Dio|2020|2165.0|true|Galle|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Bajaj Dio.|350|Sport
+Bike|B003|TVS|FZ|2018|3690.0|true|Colombo 01|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile TVS FZ.|110|Sport
+Bike|B004|Bajaj|Splendor|2018|4155.0|false|Nuwara Eliya|https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80|Experience the thrill of the open road with this agile Bajaj Splendor.|110|Commuter
+Bike|B005|Yamaha|CB Shine|2018|3400.0|true|Colombo 01|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Yamaha CB Shine.|150|Scooter
+Bike|B006|Hero|Activa|2018|3787.0|true|Nuwara Eliya|https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80|Experience the thrill of the open road with this agile Hero Activa.|125|Commuter
+Bike|B007|Yamaha|Classic 350|2024|1612.0|true|Colombo 01|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Yamaha Classic 350.|100|Sport
+Bike|B008|Bajaj|CB Shine|2020|3733.0|false|Negombo|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Bajaj CB Shine.|150|Cruiser
+Bike|B009|Honda|Splendor|2024|3016.0|true|Negombo|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Honda Splendor.|100|Cruiser
+Bike|B010|TVS|Classic 350|2021|2200.0|true|Ella|https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80|Experience the thrill of the open road with this agile TVS Classic 350.|350|Cruiser
+Bike|B011|Yamaha|CB Shine|2018|1717.0|false|Ella|https://images.unsplash.com/photo-1558981001-1995369a39cd?w=800&q=80|Experience the thrill of the open road with this agile Yamaha CB Shine.|350|Commuter
+Bike|B012|TVS|Activa|2024|2211.0|false|Colombo 03|https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80|Experience the thrill of the open road with this agile TVS Activa.|110|Commuter
+Bike|B013|Bajaj|Pulsar|2019|1697.0|true|Colombo 03|https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&q=80|Experience the thrill of the open road with this agile Bajaj Pulsar.|350|Cruiser
+Bike|B014|Yamaha|FZ|2022|2385.0|true|Colombo 03|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Yamaha FZ.|350|Scooter
+Bike|B015|Yamaha|Pulsar|2020|3635.0|true|Colombo 04|https://images.unsplash.com/photo-1620831633519-5d66c1b8214d?w=800&q=80|Experience the thrill of the open road with this agile Yamaha Pulsar.|350|Sport
+Bike|B016|Hero|Classic 350|2023|1896.0|true|Ella|https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80|Experience the thrill of the open road with this agile Hero Classic 350.|350|Commuter
+Bike|B017|Honda|Dio|2019|3482.0|false|Nuwara Eliya|https://images.unsplash.com/photo-1558981001-1995369a39cd?w=800&q=80|Experience the thrill of the open road with this agile Honda Dio.|200|Commuter
+Bike|B018|Hero|Classic 350|2018|3001.0|true|Negombo|https://images.unsplash.com/photo-1558981001-1995369a39cd?w=800&q=80|Experience the thrill of the open road with this agile Hero Classic 350.|350|Commuter
+Bike|B019|Hero|Apache|2021|4222.0|true|Kandy|https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80|Experience the thrill of the open road with this agile Hero Apache.|110|Cruiser
+Bike|B020|Bajaj|Classic 350|2023|3181.0|true|Kandy|https://images.unsplash.com/photo-1558981001-1995369a39cd?w=800&q=80|Experience the thrill of the open road with this agile Bajaj Classic 350.|350|Scooter
+Van|V001|Nissan|HiAce|2022|11563.0|true|Negombo|https://images.unsplash.com/photo-1517228834479-da99dd1e23f8?w=800&q=80|A spacious and comfortable Nissan HiAce ideal for group travel.|800|12
+Van|V002|Ford|Caravan|2020|11328.0|true|Negombo|https://images.unsplash.com/photo-1622618991746-fe6004db3a47?w=800&q=80|A spacious and comfortable Ford Caravan ideal for group travel.|1000|10
+Van|V003|Mitsubishi|HiAce|2017|12476.0|false|Kandy|https://images.unsplash.com/photo-1563227915-d72b12f68b37?w=800&q=80|A spacious and comfortable Mitsubishi HiAce ideal for group travel.|800|14
+Van|V004|Mitsubishi|HiAce|2016|13072.0|true|Negombo|https://images.unsplash.com/photo-1517228834479-da99dd1e23f8?w=800&q=80|A spacious and comfortable Mitsubishi HiAce ideal for group travel.|1500|10
+Van|V005|Mitsubishi|Transit|2017|16365.0|false|Negombo|https://images.unsplash.com/photo-1563227915-d72b12f68b37?w=800&q=80|A spacious and comfortable Mitsubishi Transit ideal for group travel.|1200|10
+Van|V006|Nissan|Sprinter|2019|21111.0|true|Jaffna|https://images.unsplash.com/photo-1563227915-d72b12f68b37?w=800&q=80|A spacious and comfortable Nissan Sprinter ideal for group travel.|1500|10
+Van|V007|Mitsubishi|Sprinter|2019|22534.0|true|Colombo 03|https://images.unsplash.com/photo-1622618991746-fe6004db3a47?w=800&q=80|A spacious and comfortable Mitsubishi Sprinter ideal for group travel.|1500|15
+Van|V008|Toyota|L300|2017|20529.0|true|Galle|https://images.unsplash.com/photo-1563227915-d72b12f68b37?w=800&q=80|A spacious and comfortable Toyota L300 ideal for group travel.|800|15
+Van|V009|Mercedes|Caravan|2019|21630.0|false|Nuwara Eliya|https://images.unsplash.com/photo-1517228834479-da99dd1e23f8?w=800&q=80|A spacious and comfortable Mercedes Caravan ideal for group travel.|800|12
+Van|V010|Nissan|Caravan|2019|11128.0|true|Matara|https://images.unsplash.com/photo-1622618991746-fe6004db3a47?w=800&q=80|A spacious and comfortable Nissan Caravan ideal for group travel.|1500|12
+Van|V011|Mitsubishi|Sprinter|2017|22326.0|true|Ella|https://images.unsplash.com/photo-1517228834479-da99dd1e23f8?w=800&q=80|A spacious and comfortable Mitsubishi Sprinter ideal for group travel.|1200|14
+Van|V012|Mitsubishi|Caravan|2023|24087.0|true|Colombo 03|https://images.unsplash.com/photo-1622618991746-fe6004db3a47?w=800&q=80|A spacious and comfortable Mitsubishi Caravan ideal for group travel.|1000|15
+Van|V013|Nissan|Transit|2021|17971.0|true|Colombo 03|https://images.unsplash.com/photo-1622618991746-fe6004db3a47?w=800&q=80|A spacious and comfortable Nissan Transit ideal for group travel.|800|14
+Van|V014|Nissan|Sprinter|2019|10128.0|true|Ella|https://images.unsplash.com/photo-1622618991746-fe6004db3a47?w=800&q=80|A spacious and comfortable Nissan Sprinter ideal for group travel.|800|15
+Van|V015|Mitsubishi|Caravan|2017|18453.0|false|Colombo 04|https://images.unsplash.com/photo-1563227915-d72b12f68b37?w=800&q=80|A spacious and comfortable Mitsubishi Caravan ideal for group travel.|1000|12
