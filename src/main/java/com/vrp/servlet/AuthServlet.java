@@ -22,9 +22,8 @@ public class AuthServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String base = System.getProperty("user.home") + "/vrp_data/";
-        userDAO    = new UserDAO(base + "users.txt");
-        bookingDAO = new BookingDAO(base + "bookings.txt");
+        userDAO    = new UserDAO(null);
+        bookingDAO = new BookingDAO(null);
     }
 
     @Override
@@ -44,21 +43,19 @@ public class AuthServlet extends HttpServlet {
                 return;
 
             case "users": {
-                // Admin-only — enforced by AuthFilter on /auth
                 try {
                     List<User> users = userDAO.getAllUsers();
                     Map<String, Long> counts = userDAO.getRoleCounts();
                     req.setAttribute("users", users);
                     req.setAttribute("userCounts", counts);
                     req.getRequestDispatcher("/WEB-INF/views/listUsers.jsp").forward(req, resp);
-                } catch (IOException e) { throw new ServletException(e); }
+                } catch (Exception e) { throw new ServletException(e); }
                 return;
             }
 
             case "deleteUser": {
-                // Admin-only
                 String username = req.getParameter("username");
-                try { userDAO.deleteUser(username); } catch (IOException e) { throw new ServletException(e); }
+                try { userDAO.deleteUser(username); } catch (Exception e) { throw new ServletException(e); }
                 resp.sendRedirect(req.getContextPath() + "/auth?action=users&msg=deleted");
                 return;
             }
@@ -72,12 +69,12 @@ public class AuthServlet extends HttpServlet {
                         long active    = myBookings.stream().filter(b -> b.isConfirmed() || b.isPending()).count();
                         long completed = myBookings.stream().filter(Booking::isCompleted).count();
                         double spent   = myBookings.stream().filter(b -> !b.isCancelled()).mapToDouble(Booking::getTotalCost).sum();
-                        req.setAttribute("myBookingCount", myBookings.size());
-                        req.setAttribute("myActiveCount",  active);
+                        req.setAttribute("myBookingCount",   myBookings.size());
+                        req.setAttribute("myActiveCount",    active);
                         req.setAttribute("myCompletedCount", completed);
-                        req.setAttribute("myTotalSpent", spent);
+                        req.setAttribute("myTotalSpent",     spent);
                         req.setAttribute("myRecentBookings", myBookings.subList(0, Math.min(3, myBookings.size())));
-                    } catch (IOException ignored) {}
+                    } catch (Exception ignored) {}
                 }
                 req.getRequestDispatcher("/WEB-INF/views/userDashboard.jsp").forward(req, resp);
                 return;
@@ -103,14 +100,13 @@ public class AuthServlet extends HttpServlet {
                 } else {
                     resp.sendRedirect(req.getContextPath() + "/auth?action=login&error=invalid");
                 }
-            } catch (IOException e) { throw new ServletException(e); }
+            } catch (Exception e) { throw new ServletException(e); }
 
         } else if ("register".equals(action)) {
             String username = req.getParameter("username");
             String password = req.getParameter("password");
             String name     = req.getParameter("name");
 
-            // Basic server-side validation
             if (username == null || username.trim().isEmpty() || !username.matches("[A-Za-z0-9_]+")) {
                 resp.sendRedirect(req.getContextPath() + "/auth?action=register&error=baduser");
                 return;
@@ -130,7 +126,7 @@ public class AuthServlet extends HttpServlet {
                     session.setAttribute("loggedInUser", newUser);
                     resp.sendRedirect(req.getContextPath() + "/auth?action=dashboard");
                 }
-            } catch (IOException e) { throw new ServletException(e); }
+            } catch (Exception e) { throw new ServletException(e); }
 
         } else {
             resp.sendRedirect(req.getContextPath() + "/vehicles?action=browse");

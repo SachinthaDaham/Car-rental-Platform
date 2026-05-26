@@ -30,8 +30,7 @@ public class ChatServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String base = System.getProperty("user.home") + "/vrp_data/";
-        chatDAO = new ChatDAO(base + "messages.txt");
+        chatDAO = new ChatDAO(null);
     }
 
     // ── GET ───────────────────────────────────────────────────────────────────
@@ -133,7 +132,7 @@ public class ChatServlet extends HttpServlet {
                     else
                         resp.sendRedirect(req.getContextPath() + "/auth?action=login");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
@@ -172,7 +171,7 @@ public class ChatServlet extends HttpServlet {
                 "{\"success\":true,\"messageId\":\"%s\",\"timestamp\":\"%s\",\"shortTime\":\"%s\"}",
                 esc(messageId), esc(timestamp), esc(msg.getShortTime())
             ));
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }

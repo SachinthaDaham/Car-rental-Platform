@@ -1,95 +1,97 @@
 package com.vrp.dao;
 
 import com.vrp.model.User;
-import java.io.*;
+import java.sql.*;
 import java.util.*;
 
-/**
- * File-based Data Access Object for User entities.
- * Demonstrates ENCAPSULATION — all file I/O is hidden behind public methods.
- */
 public class UserDAO {
-    private final String filePath;
 
-    public UserDAO(String filePath) {
-        this.filePath = filePath;
-        ensureFileExists();
+    public UserDAO(String ignored) {
+        ensureAdminExists();
     }
 
-    private void ensureFileExists() {
-        try {
-            File f = new File(filePath);
-            File parent = f.getParentFile();
-            if (parent != null && !parent.exists()) parent.mkdirs();
-            if (!f.exists()) {
-                f.createNewFile();
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))) {
-                    bw.write(new User("admin", "admin123", "System Administrator", "ADMIN").toFileString());
-                    bw.newLine();
-                }
-            }
-        } catch (IOException e) { e.printStackTrace(); }
+    private void ensureAdminExists() {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "INSERT IGNORE INTO users VALUES (?,?,?,?)")) {
+            ps.setString(1, "admin");
+            ps.setString(2, "admin123");
+            ps.setString(3, "System Administrator");
+            ps.setString(4, "ADMIN");
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
-    /** CREATE */
-    public synchronized void addUser(User u) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))) {
-            bw.write(u.toFileString());
-            bw.newLine();
+    // ── CREATE ───────────────────────────────────────────────────────────────
+    public void addUser(User u) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "INSERT INTO users (username, password, name, role) VALUES (?,?,?,?)")) {
+            ps.setString(1, u.getUsername());
+            ps.setString(2, u.getPassword());
+            ps.setString(3, u.getName());
+            ps.setString(4, u.getRole());
+            ps.executeUpdate();
         }
     }
 
-    /** READ all */
-    public synchronized List<User> getAllUsers() throws IOException {
+    // ── READ ─────────────────────────────────────────────────────────────────
+    public List<User> getAllUsers() throws SQLException {
         List<User> list = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                String[] p = line.split("\\|", -1);
-                if (p.length >= 4) list.add(new User(p[0], p[1], p[2], p[3]));
-            }
+        try (Connection c = DBConnection.get();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM users")) {
+            while (rs.next()) list.add(map(rs));
         }
         return list;
     }
 
-    public User getUserByUsername(String username) throws IOException {
-        for (User u : getAllUsers())
-            if (u.getUsername().equalsIgnoreCase(username)) return u;
-        return null;
+    public User getUserByUsername(String username) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "SELECT * FROM users WHERE username = ?")) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
     }
 
-    public User authenticate(String username, String password) throws IOException {
+    public User authenticate(String username, String password) throws SQLException {
         User u = getUserByUsername(username);
         return (u != null && u.getPassword().equals(password)) ? u : null;
     }
 
-    public boolean userExists(String username) throws IOException {
+    public boolean userExists(String username) throws SQLException {
         return getUserByUsername(username) != null;
     }
 
-    /** DELETE — admin cannot be deleted */
-    public synchronized boolean deleteUser(String username) throws IOException {
+    // ── DELETE ───────────────────────────────────────────────────────────────
+    public boolean deleteUser(String username) throws SQLException {
         if ("admin".equalsIgnoreCase(username)) return false;
-        List<User> all = getAllUsers();
-        boolean removed = all.removeIf(u -> u.getUsername().equalsIgnoreCase(username));
-        if (removed) writeAll(all);
-        return removed;
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "DELETE FROM users WHERE username = ?")) {
+            ps.setString(1, username);
+            return ps.executeUpdate() > 0;
+        }
     }
 
-    /** Returns count of users per role. */
-    public Map<String, Long> getRoleCounts() throws IOException {
+    public Map<String, Long> getRoleCounts() throws SQLException {
         List<User> all = getAllUsers();
         Map<String, Long> m = new LinkedHashMap<>();
-        m.put("total", (long) all.size());
-        m.put("admins", all.stream().filter(User::isAdmin).count());
+        m.put("total",     (long) all.size());
+        m.put("admins",    all.stream().filter(User::isAdmin).count());
         m.put("customers", all.stream().filter(u -> !u.isAdmin()).count());
         return m;
     }
 
-    private void writeAll(List<User> list) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, false))) {
-            for (User u : list) { bw.write(u.toFileString()); bw.newLine(); }
-        }
+    private User map(ResultSet rs) throws SQLException {
+        return new User(
+            rs.getString("username"),
+            rs.getString("password"),
+            rs.getString("name"),
+            rs.getString("role")
+        );
     }
 }

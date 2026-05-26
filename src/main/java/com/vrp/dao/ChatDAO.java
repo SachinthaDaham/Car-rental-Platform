@@ -1,102 +1,97 @@
 package com.vrp.dao;
 
 import com.vrp.model.ChatMessage;
-
-import java.io.*;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ChatDAO {
 
-    private final String filePath;
+    public ChatDAO(String ignored) {}
 
-    public ChatDAO(String filePath) {
-        this.filePath = filePath;
-        ensureFileExists();
-    }
-
-    private void ensureFileExists() {
-        try {
-            File f = new File(filePath);
-            File parent = f.getParentFile();
-            if (parent != null && !parent.exists()) parent.mkdirs();
-            if (!f.exists()) f.createNewFile();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    // ── CREATE ────────────────────────────────────────────────────────────────
-    public synchronized void addMessage(ChatMessage msg) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))) {
-            bw.write(msg.toFileString());
-            bw.newLine();
+    // ── CREATE ───────────────────────────────────────────────────────────────
+    public void addMessage(ChatMessage msg) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "INSERT INTO chat_messages VALUES (?,?,?,?,?,?,?)")) {
+            ps.setString(1, msg.getMessageId());
+            ps.setString(2, msg.getConversationId());
+            ps.setString(3, msg.getFromUsername());
+            ps.setString(4, msg.getFromRole());
+            ps.setString(5, msg.getContent());
+            ps.setString(6, msg.getTimestamp());
+            ps.setBoolean(7, msg.isRead());
+            ps.executeUpdate();
         }
     }
 
-    // ── READ ──────────────────────────────────────────────────────────────────
-    public synchronized List<ChatMessage> getAllMessages() throws IOException {
+    // ── READ ─────────────────────────────────────────────────────────────────
+    public List<ChatMessage> getAllMessages() throws SQLException {
         List<ChatMessage> list = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                ChatMessage m = parseLine(line);
-                if (m != null) list.add(m);
+        try (Connection c = DBConnection.get();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM chat_messages ORDER BY sent_at ASC")) {
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    public List<ChatMessage> getConversation(String conversationId) throws SQLException {
+        List<ChatMessage> list = new ArrayList<>();
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "SELECT * FROM chat_messages WHERE conversation_id = ? ORDER BY sent_at ASC")) {
+            ps.setString(1, conversationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
             }
         }
         return list;
     }
 
-    public List<ChatMessage> getConversation(String conversationId) throws IOException {
-        return getAllMessages().stream()
-            .filter(m -> m.getConversationId().equalsIgnoreCase(conversationId))
-            .collect(Collectors.toList());
-    }
-
-    /** Messages in a conversation that arrived after `since` timestamp. */
-    public List<ChatMessage> getMessagesSince(String conversationId, String since) throws IOException {
+    public List<ChatMessage> getMessagesSince(String conversationId, String since) throws SQLException {
         return getConversation(conversationId).stream()
             .filter(m -> m.getTimestamp().compareTo(since) > 0)
             .collect(Collectors.toList());
     }
 
     // ── MARK READ ─────────────────────────────────────────────────────────────
-    /**
-     * Mark as read messages written by the OTHER side.
-     * readerRole = "ADMIN"    → marks CUSTOMER messages as read
-     * readerRole = "CUSTOMER" → marks ADMIN messages as read
-     */
-    public synchronized void markRead(String conversationId, String readerRole) throws IOException {
-        List<ChatMessage> all = getAllMessages();
-        boolean changed = false;
-        for (ChatMessage m : all) {
-            if (m.getConversationId().equalsIgnoreCase(conversationId)
-                    && !m.isRead()
-                    && !m.getFromRole().equals(readerRole)) {
-                m.setRead(true);
-                changed = true;
-            }
+    public void markRead(String conversationId, String readerRole) throws SQLException {
+        String sql = "UPDATE chat_messages SET is_read = TRUE " +
+                     "WHERE conversation_id = ? AND from_role != ? AND is_read = FALSE";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, conversationId);
+            ps.setString(2, readerRole);
+            ps.executeUpdate();
         }
-        if (changed) writeAll(all);
     }
 
     // ── UNREAD COUNTS ─────────────────────────────────────────────────────────
-    public long getUnreadCountForCustomer(String conversationId) throws IOException {
-        return getAllMessages().stream()
-            .filter(m -> m.getConversationId().equalsIgnoreCase(conversationId))
-            .filter(m -> !m.isRead() && m.isFromAdmin())
-            .count();
+    public long getUnreadCountForCustomer(String conversationId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM chat_messages WHERE conversation_id = ? " +
+                     "AND from_role = 'ADMIN' AND is_read = FALSE";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, conversationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : 0;
+            }
+        }
     }
 
-    public long getTotalAdminUnread() throws IOException {
-        return getAllMessages().stream()
-            .filter(m -> !m.isRead() && !m.isFromAdmin())
-            .count();
+    public long getTotalAdminUnread() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM chat_messages WHERE from_role = 'CUSTOMER' AND is_read = FALSE";
+        try (Connection c = DBConnection.get();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            return rs.next() ? rs.getLong(1) : 0;
+        }
     }
 
-    // ── CONVERSATION LIST for admin sidebar ───────────────────────────────────
-    public List<Map<String, Object>> getConversationList() throws IOException {
+    // ── CONVERSATION LIST ─────────────────────────────────────────────────────
+    public List<Map<String, Object>> getConversationList() throws SQLException {
         List<ChatMessage> all = getAllMessages();
-        // Group by conversationId preserving insertion order
         Map<String, List<ChatMessage>> byConv = new LinkedHashMap<>();
         for (ChatMessage m : all)
             byConv.computeIfAbsent(m.getConversationId(), k -> new ArrayList<>()).add(m);
@@ -113,7 +108,6 @@ public class ChatDAO {
             conv.put("messageCount",   msgs.size());
             result.add(conv);
         }
-        // Sort newest last-message first
         result.sort((a, b) -> {
             String ta = ((ChatMessage) a.get("lastMessage")).getTimestamp();
             String tb = ((ChatMessage) b.get("lastMessage")).getTimestamp();
@@ -123,22 +117,30 @@ public class ChatDAO {
     }
 
     // ── ID GENERATION ─────────────────────────────────────────────────────────
-    public synchronized String nextMessageId() throws IOException {
-        return String.format("MSG%05d", getAllMessages().size() + 1);
-    }
-
-    // ── Private helpers ───────────────────────────────────────────────────────
-    private void writeAll(List<ChatMessage> list) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, false))) {
-            for (ChatMessage m : list) { bw.write(m.toFileString()); bw.newLine(); }
+    public String nextMessageId() throws SQLException {
+        try (Connection c = DBConnection.get();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery(
+                 "SELECT message_id FROM chat_messages ORDER BY message_id DESC LIMIT 1")) {
+            int max = 0;
+            if (rs.next()) {
+                String last = rs.getString(1);
+                if (last != null && last.startsWith("MSG"))
+                    try { max = Integer.parseInt(last.substring(3)); } catch (NumberFormatException ignored) {}
+            }
+            return String.format("MSG%05d", max + 1);
         }
     }
 
-    private ChatMessage parseLine(String line) {
-        String[] p = line.split("\\|", -1);
-        if (p.length < 7) return null;
-        try {
-            return new ChatMessage(p[0], p[1], p[2], p[3], p[4], p[5], "1".equals(p[6]));
-        } catch (Exception e) { return null; }
+    private ChatMessage map(ResultSet rs) throws SQLException {
+        return new ChatMessage(
+            rs.getString("message_id"),
+            rs.getString("conversation_id"),
+            rs.getString("from_username"),
+            rs.getString("from_role"),
+            rs.getString("content"),
+            rs.getString("sent_at"),
+            rs.getBoolean("is_read")
+        );
     }
 }

@@ -29,9 +29,8 @@ public class VehicleServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String base = System.getProperty("user.home") + "/vrp_data/";
-        dao        = new VehicleDAO(base + "vehicles.txt");
-        bookingDAO = new BookingDAO(base + "bookings.txt");
+        dao        = new VehicleDAO(null);
+        bookingDAO = new BookingDAO(null);
     }
 
     // ── GET ─────────────────────────────────────────────────────────────────
@@ -132,7 +131,7 @@ public class VehicleServlet extends HttpServlet {
                     req.getRequestDispatcher("/WEB-INF/views/browse.jsp").forward(req, resp);
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }

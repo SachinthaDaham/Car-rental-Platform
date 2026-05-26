@@ -1,138 +1,138 @@
 package com.vrp.dao;
 
 import com.vrp.model.Booking;
-
-import java.io.*;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * File-based Data Access Object for Booking entities.
- * Demonstrates ENCAPSULATION and the DAO pattern — all file I/O hidden behind
- * a clean public API, so servlets never touch file operations directly.
- *
- * File format (13 pipe-delimited fields per line):
- *   bookingId|vehicleId|vehicleName|vehicleType|customerUsername|customerName|
- *   startDate|endDate|days|dailyRate|totalCost|status|createdAt
- */
 public class BookingDAO {
 
-    private final String filePath;
-
-    public BookingDAO(String filePath) {
-        this.filePath = filePath;
-        ensureFileExists();
-    }
-
-    private void ensureFileExists() {
-        try {
-            File f = new File(filePath);
-            File parent = f.getParentFile();
-            if (parent != null && !parent.exists()) parent.mkdirs();
-            if (!f.exists()) f.createNewFile();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
+    public BookingDAO(String ignored) {}
 
     // ── CREATE ───────────────────────────────────────────────────────────────
-    public synchronized void addBooking(Booking b) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, true))) {
-            bw.write(b.toFileString());
-            bw.newLine();
+    public void addBooking(Booking b) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "INSERT INTO bookings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, b.getBookingId());
+            ps.setString(2, b.getVehicleId());
+            ps.setString(3, b.getVehicleName());
+            ps.setString(4, b.getVehicleType());
+            ps.setString(5, b.getCustomerUsername());
+            ps.setString(6, b.getCustomerName());
+            ps.setString(7, b.getStartDate());
+            ps.setString(8, b.getEndDate());
+            ps.setInt(9, b.getDays());
+            ps.setDouble(10, b.getDailyRate());
+            ps.setDouble(11, b.getTotalCost());
+            ps.setString(12, b.getStatus());
+            ps.setString(13, b.getCreatedAt());
+            ps.executeUpdate();
         }
     }
 
-    // ── READ all ─────────────────────────────────────────────────────────────
-    public synchronized List<Booking> getAllBookings() throws IOException {
+    // ── READ ─────────────────────────────────────────────────────────────────
+    public List<Booking> getAllBookings() throws SQLException {
         List<Booking> list = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                Booking b = parseLine(line);
-                if (b != null) list.add(b);
+        try (Connection c = DBConnection.get();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM bookings ORDER BY created_at DESC")) {
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    public Booking getBookingById(String id) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "SELECT * FROM bookings WHERE booking_id = ?")) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        }
+    }
+
+    public List<Booking> getBookingsByUser(String username) throws SQLException {
+        List<Booking> list = new ArrayList<>();
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "SELECT * FROM bookings WHERE customer_username = ? ORDER BY created_at DESC")) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
             }
         }
         return list;
     }
 
-    public Booking getBookingById(String id) throws IOException {
-        for (Booking b : getAllBookings())
-            if (b.getBookingId().equalsIgnoreCase(id)) return b;
-        return null;
-    }
-
-    /** Bookings belonging to a specific customer, newest first. */
-    public List<Booking> getBookingsByUser(String username) throws IOException {
-        List<Booking> result = getAllBookings().stream()
-            .filter(b -> b.getCustomerUsername().equalsIgnoreCase(username))
-            .collect(Collectors.toList());
-        Collections.reverse(result);
-        return result;
-    }
-
-    /** All bookings for a specific vehicle. */
-    public List<Booking> getBookingsByVehicle(String vehicleId) throws IOException {
-        return getAllBookings().stream()
-            .filter(b -> b.getVehicleId().equalsIgnoreCase(vehicleId))
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Returns true if the given date range overlaps with any PENDING or CONFIRMED booking
-     * for the specified vehicle. Uses exclusive-end convention: conflict when
-     * newStart < bookedEnd AND bookedStart < newEnd.
-     */
-    public boolean hasDateConflict(String vehicleId, String startDate, String endDate) throws IOException {
-        LocalDate ns = LocalDate.parse(startDate);
-        LocalDate ne = LocalDate.parse(endDate);
-        for (Booking b : getAllBookings()) {
-            if (!b.getVehicleId().equalsIgnoreCase(vehicleId)) continue;
-            if (b.isCancelled() || b.isCompleted()) continue;
-            LocalDate bs = LocalDate.parse(b.getStartDate());
-            LocalDate be = LocalDate.parse(b.getEndDate());
-            if (ns.isBefore(be) && bs.isBefore(ne)) return true;
+    public List<Booking> getBookingsByVehicle(String vehicleId) throws SQLException {
+        List<Booking> list = new ArrayList<>();
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "SELECT * FROM bookings WHERE vehicle_id = ?")) {
+            ps.setString(1, vehicleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
         }
-        return false;
+        return list;
     }
 
-    /**
-     * Returns all PENDING/CONFIRMED booked date ranges for a vehicle
-     * as a list of {startDate, endDate} string pairs.
-     */
-    public List<String[]> getBookedDateRanges(String vehicleId) throws IOException {
+    public boolean hasDateConflict(String vehicleId, String startDate, String endDate) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM bookings WHERE vehicle_id = ? " +
+                     "AND status IN ('PENDING','CONFIRMED') " +
+                     "AND start_date < ? AND end_date > ?";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, vehicleId);
+            ps.setString(2, endDate);
+            ps.setString(3, startDate);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    public List<String[]> getBookedDateRanges(String vehicleId) throws SQLException {
         List<String[]> ranges = new ArrayList<>();
-        for (Booking b : getAllBookings()) {
-            if (!b.getVehicleId().equalsIgnoreCase(vehicleId)) continue;
-            if (b.isCancelled() || b.isCompleted()) continue;
-            ranges.add(new String[]{b.getStartDate(), b.getEndDate()});
+        String sql = "SELECT start_date, end_date FROM bookings WHERE vehicle_id = ? " +
+                     "AND status IN ('PENDING','CONFIRMED')";
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, vehicleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    ranges.add(new String[]{rs.getString("start_date"), rs.getString("end_date")});
+            }
         }
         return ranges;
     }
 
-    // ── UPDATE status ────────────────────────────────────────────────────────
-    public synchronized boolean updateStatus(String bookingId, String newStatus) throws IOException {
-        List<Booking> all = getAllBookings();
-        boolean found = false;
-        for (Booking b : all) {
-            if (b.getBookingId().equalsIgnoreCase(bookingId)) {
-                b.setStatus(newStatus); found = true; break;
-            }
+    // ── UPDATE ───────────────────────────────────────────────────────────────
+    public boolean updateStatus(String bookingId, String newStatus) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "UPDATE bookings SET status = ? WHERE booking_id = ?")) {
+            ps.setString(1, newStatus);
+            ps.setString(2, bookingId);
+            return ps.executeUpdate() > 0;
         }
-        if (found) writeAll(all);
-        return found;
     }
 
     // ── DELETE ───────────────────────────────────────────────────────────────
-    public synchronized boolean deleteBooking(String bookingId) throws IOException {
-        List<Booking> all = getAllBookings();
-        boolean removed = all.removeIf(b -> b.getBookingId().equalsIgnoreCase(bookingId));
-        if (removed) writeAll(all);
-        return removed;
+    public boolean deleteBooking(String bookingId) throws SQLException {
+        try (Connection c = DBConnection.get();
+             PreparedStatement ps = c.prepareStatement(
+                 "DELETE FROM bookings WHERE booking_id = ?")) {
+            ps.setString(1, bookingId);
+            return ps.executeUpdate() > 0;
+        }
     }
 
-    // ── STATS for admin dashboard ─────────────────────────────────────────────
-    public Map<String, Object> getStats() throws IOException {
+    // ── STATS ────────────────────────────────────────────────────────────────
+    public Map<String, Object> getStats() throws SQLException {
         List<Booking> all = getAllBookings();
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("total",     all.size());
@@ -140,43 +140,42 @@ public class BookingDAO {
         m.put("confirmed", all.stream().filter(Booking::isConfirmed).count());
         m.put("cancelled", all.stream().filter(Booking::isCancelled).count());
         m.put("completed", all.stream().filter(Booking::isCompleted).count());
-        double revenue = all.stream()
-            .filter(b -> !b.isCancelled())
-            .mapToDouble(Booking::getTotalCost).sum();
+        double revenue = all.stream().filter(b -> !b.isCancelled())
+                            .mapToDouble(Booking::getTotalCost).sum();
         m.put("totalRevenue", revenue);
         return m;
     }
 
-    /** Generates the next booking ID: BK0001, BK0002, … — safe even after deletions. */
-    public synchronized String nextBookingId() throws IOException {
-        int max = 0;
-        for (Booking b : getAllBookings()) {
-            String id = b.getBookingId();
-            if (id != null && id.startsWith("BK")) {
-                try { max = Math.max(max, Integer.parseInt(id.substring(2))); } catch (NumberFormatException ignored) {}
+    public synchronized String nextBookingId() throws SQLException {
+        try (Connection c = DBConnection.get();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery(
+                 "SELECT booking_id FROM bookings ORDER BY booking_id DESC LIMIT 1")) {
+            int max = 0;
+            if (rs.next()) {
+                String last = rs.getString(1);
+                if (last != null && last.startsWith("BK"))
+                    try { max = Integer.parseInt(last.substring(2)); } catch (NumberFormatException ignored) {}
             }
-        }
-        return String.format("BK%04d", max + 1);
-    }
-
-    // ── Private helpers ───────────────────────────────────────────────────────
-    private void writeAll(List<Booking> list) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, false))) {
-            for (Booking b : list) { bw.write(b.toFileString()); bw.newLine(); }
+            return String.format("BK%04d", max + 1);
         }
     }
 
-    private Booking parseLine(String line) {
-        String[] p = line.split("\\|", -1);
-        if (p.length < 13) return null;
-        try {
-            return new Booking(
-                p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
-                Integer.parseInt(p[8]),
-                Double.parseDouble(p[9]),
-                Double.parseDouble(p[10]),
-                p[11], p[12]
-            );
-        } catch (Exception e) { return null; }
+    private Booking map(ResultSet rs) throws SQLException {
+        return new Booking(
+            rs.getString("booking_id"),
+            rs.getString("vehicle_id"),
+            rs.getString("vehicle_name"),
+            rs.getString("vehicle_type"),
+            rs.getString("customer_username"),
+            rs.getString("customer_name"),
+            rs.getString("start_date"),
+            rs.getString("end_date"),
+            rs.getInt("days"),
+            rs.getDouble("daily_rate"),
+            rs.getDouble("total_cost"),
+            rs.getString("status"),
+            rs.getString("created_at")
+        );
     }
 }

@@ -27,9 +27,8 @@ public class PaymentServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        String base = System.getProperty("user.home") + "/vrp_data/";
-        bookingDAO = new BookingDAO(base + "bookings.txt");
-        paymentDAO = new PaymentDAO(base + "payments.txt");
+        bookingDAO = new BookingDAO(null);
+        paymentDAO = new PaymentDAO(null);
     }
 
     // ── GET ───────────────────────────────────────────────────────────────────
@@ -86,7 +85,7 @@ public class PaymentServlet extends HttpServlet {
                 default:
                     resp.sendRedirect(req.getContextPath() + "/booking?action=my");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new ServletException(e);
         }
     }
