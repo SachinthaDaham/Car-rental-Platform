@@ -101,6 +101,7 @@
               </label>
               <input type="date" id="endDate" name="endDate"
                      min="<%= today %>" max="<%= maxDate %>" required
+                     onclick="try{this.showPicker();}catch(e){}"
                      class="w-full px-4 py-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 text-sm">
             </div>
           </div>
@@ -305,10 +306,18 @@
   }
 
   startEl.addEventListener('change', function() {
+    // Set end min to day AFTER start date
+    var nextDay = new Date(this.value + 'T00:00:00');
+    nextDay.setDate(nextDay.getDate() + 1);
+    var nextDayStr = nextDay.toISOString().split('T')[0];
+    endEl.min = nextDayStr;
+    // Clear end date if it's no longer valid
     if (endEl.value && endEl.value <= this.value) endEl.value = '';
-    endEl.min = this.value;
     checkConflictAndUpdate();
     refreshCost();
+    // Auto-focus end date so user can pick it immediately
+    endEl.focus();
+    try { endEl.showPicker(); } catch(e) {}
   });
   endEl.addEventListener('change', function() {
     checkConflictAndUpdate();
